@@ -27,7 +27,7 @@ extern RsgGlobalContext* rsgGlobalContext;
 
 void rsgMainLoop(RsgNode* rootNode) {
   RsgLocalContext* lctx = rsgMalloc(sizeof(*lctx));
-  rsgLocalContextInitDefaults(lctx);
+  rsgLocalContextSetDefaults(lctx);
 
   RsgGlobalContext* gctx = rsgGlobalContext;
 

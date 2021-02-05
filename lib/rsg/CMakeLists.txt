@@ -9,7 +9,7 @@ set(SRCS
   src/r_malloc.c
   src/r_value.c
   src/r_init.c
-  src/r_context.c
+  src/r_local_context.c
   src/r_main_loop.c
   src/r_node.c
   src/r_callback_node.c

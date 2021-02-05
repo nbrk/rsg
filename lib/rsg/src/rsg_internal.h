@@ -28,6 +28,8 @@
 #include <assert.h>
 #include <sys/queue.h>
 
+#define RSG_LOCAL_CONTEXT_MAX_UNIFORMS 16
+
 /*******************************************************************************
  * DATA.
  */
@@ -40,21 +42,20 @@ typedef struct {
 } RsgGlobalContext;
 
 /**
- * @brief Uniform value based on our Value machinery
- */
-typedef struct RsgUniform RsgUniform;
-struct RsgUniform {
-  const char* name;
-  RsgValue value;
-  SLIST_ENTRY(RsgUniform) entries;
-};
-
-/**
  * @brief Context local to a subtree
  */
 typedef struct {
+  /*
+   * OpenGL state machine related settings used in various nodes
+   */
   GLuint program;
-  SLIST_HEAD(, RsgUniform) uniforms;
+  size_t numUniforms;
+
+  /*
+   * Uniforms passed to shaders in drawing nodes
+   */
+  const char* uniformNames[RSG_LOCAL_CONTEXT_MAX_UNIFORMS];
+  RsgValue uniformValues[RSG_LOCAL_CONTEXT_MAX_UNIFORMS];
 } RsgLocalContext;
 
 /**
@@ -86,21 +87,33 @@ struct RsgNode {
  * @brief Initialize a base node structure with default values
  * @param node
  */
-extern void rsgNodeInit(RsgNode* node);
+extern void rsgNodeSetDefaults(RsgNode* node);
 
-void rsgLocalContextInitDefaults(RsgLocalContext* lctx);
+/**
+ * @brief Init the local context with default values
+ * @param lctx
+ */
+void rsgLocalContextSetDefaults(RsgLocalContext* lctx);
 
 /**
  * @brief Set/insert/overwrite a uniform value in the local context
  * @param lctx
- * @param u
+ * @param name
+ * @param value
  */
 extern void rsgLocalContextSetUniform(RsgLocalContext* lctx,
-                                      RsgUniform* uniform);
+                                      const char* name,
+                                      RsgValue value);
 
 /**
  * @brief Make a deep copy (backup) of the context, its internal lists, etc.
  * @param lctx
  * @return
  */
-extern RsgLocalContext* rsgLocalContextDeepCopy(RsgLocalContext* origlctx);
+extern RsgLocalContext* rsgLocalContextCreateCopy(RsgLocalContext* origlctx);
+
+/**
+ * @brief Destroy local context's variables, lists, etc. and free the memory
+ * @param lctx
+ */
+extern void rsgLocalContextDestroy(RsgGlobalContext* lctx);

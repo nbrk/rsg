@@ -52,7 +52,7 @@ RsgShaderNode* rsgShaderNodeCreate(const char* vertexText,
    */
   RsgShaderNode* node = rsgMalloc(sizeof(*node));
 
-  rsgNodeInit(&node->node);
+  rsgNodeSetDefaults(&node->node);
 
   // base
   node->node.getTypeFunc = getType;

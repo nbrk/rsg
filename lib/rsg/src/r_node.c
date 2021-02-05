@@ -33,7 +33,7 @@ static void process(RsgNode* node,
   assert(0 && "Node process function not set");
 }
 
-void rsgNodeInit(RsgNode* node) {
+void rsgNodeSetDefaults(RsgNode* node) {
   // ops (some must be set in containing nodes)
   node->getTypeFunc = getType;
   node->destroyFunc = NULL;

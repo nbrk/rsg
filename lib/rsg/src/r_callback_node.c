@@ -41,7 +41,7 @@ static void process(RsgNode* node,
 
 RsgCallbackNode* rsgCallbackNodeCreate(void (*func)(void*), void* cookie) {
   RsgCallbackNode* node = rsgMalloc(sizeof(*node));
-  rsgNodeInit(&node->node);
+  rsgNodeSetDefaults(&node->node);
 
   // base
   node->node.getTypeFunc = getType;

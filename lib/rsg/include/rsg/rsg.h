@@ -159,7 +159,7 @@ extern RsgMeshNode* rsgMeshNodeCreateTriangle(void);
  */
 extern RsgUniformSetterNode* rsgUniformSetterNodeCreate(const char** names,
                                                         RsgValue* values,
-                                                        size_t size);
+                                                        size_t numValues);
 /*
  * Shader node functions
  */

@@ -68,7 +68,7 @@ static void process(RsgNode* node,
 
 RsgGroupNode* rsgGroupNodeCreate(void) {
   RsgGroupNode* node = rsgMalloc(sizeof(*node));
-  rsgNodeInit(&node->node);
+  rsgNodeSetDefaults(&node->node);
 
   // base
   node->node.getTypeFunc = getType;

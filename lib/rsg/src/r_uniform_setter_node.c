@@ -26,7 +26,9 @@
 
 struct RsgUniformSetterNode {
   RsgNode node;
-  SLIST_HEAD(, RsgUniform) uniforms;
+  size_t numUniforms;
+  const char* uniformNames[RSG_LOCAL_CONTEXT_MAX_UNIFORMS];
+  RsgValue uniformValues[RSG_LOCAL_CONTEXT_MAX_UNIFORMS];
 };
 
 static const char* getType(void) {
@@ -37,37 +39,35 @@ static void process(RsgNode* node,
                     RsgLocalContext* lctx,
                     RsgGlobalContext* gctx) {
   RsgUniformSetterNode* cnode = (RsgUniformSetterNode*)node;
+
   /*
-   * Push all our uniforms to the local context.
+   * Write all our uniforms to the local context.
    */
-  RsgUniform* uniform;
-  SLIST_FOREACH(uniform, &cnode->uniforms, entries) {
-    rsgLocalContextSetUniform(lctx, uniform);
+  size_t i;
+  for (i = 0; i < cnode->numUniforms; i++) {
+    rsgLocalContextSetUniform(lctx, cnode->uniformNames[i],
+                              cnode->uniformValues[i]);
   }
 }
 
 RsgUniformSetterNode* rsgUniformSetterNodeCreate(const char** names,
                                                  RsgValue* values,
-                                                 size_t size) {
+                                                 size_t numValues) {
+  assert(numValues < RSG_LOCAL_CONTEXT_MAX_UNIFORMS);
+
   RsgUniformSetterNode* node = rsgMalloc(sizeof(*node));
-  rsgNodeInit(&node->node);
+  rsgNodeSetDefaults(&node->node);
 
   // base
   node->node.getTypeFunc = getType;
   node->node.processFunc = process;
 
-  // other data
-  SLIST_INIT(&node->uniforms);
-
-  // configure our uniforms list from the user data (initial values)
+  // copy uniform names/values
+  node->numUniforms = numValues;
   size_t i;
-  for (i = 0; i < size; i++) {
-    RsgUniform* uniform = rsgMalloc(sizeof(*uniform));
-    uniform->name = names[i];
-    uniform->value = values[i];
-    printf("RsgUniformSetterNode: inserting uniform '%s' of type %d\n",
-           uniform->name, uniform->value.type);
-    SLIST_INSERT_HEAD(&node->uniforms, uniform, entries);
+  for (i = 0; i < numValues; i++) {
+    node->uniformNames[i] = names[i];
+    node->uniformValues[i] = values[i];
   }
 
   return node;

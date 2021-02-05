@@ -36,28 +36,52 @@ static void process(RsgNode* node,
                     RsgGlobalContext* gctx) {
   RsgMeshNode* cnode = (RsgMeshNode*)node;
 
-  // set program from the context
+  /*
+   * Actually draw the geometry setting various OpenGL values/shader uniforms
+   * from the local context beforehand.
+   */
+  /*
+   * TODO: Save current OpenGL state
+   */
+
+  // program
   glUseProgram(lctx->program);
 
-  // set uniforms from the context (if eligible for this program)
-  RsgUniform* uniform;
-  SLIST_FOREACH(uniform, &lctx->uniforms, entries) {
-    GLint loc = glGetUniformLocation(lctx->program, uniform->name);
-    if (loc != -1) {
-      if (uniform->value.type == RSG_VALUE_INT)
-        glUniform1i(loc, uniform->value.asInt);
-      if (uniform->value.type == RSG_VALUE_FLOAT)
-        glUniform1f(loc, uniform->value.asFloat);
-      if (uniform->value.type == RSG_VALUE_VEC4)
-        glUniform4fv(loc, 1, (GLfloat*)&uniform->value.asVec4);
+  // uniforms
+  size_t i;
+  for (i = 0; i < lctx->numUniforms; i++) {
+    /*
+     * Set the value if the program in use has such a uniform location.
+     * Determine the corresponding OpenGL typed set call using the Value type.
+     */
+    GLint uniformLocation =
+        glGetUniformLocation(lctx->program, lctx->uniformNames[i]);
+    if (uniformLocation != -1) {
+      RsgValue* value = &lctx->uniformValues[i];
+      if (value->type == RSG_VALUE_INT)
+        glUniform1i(uniformLocation, value->asInt);
+      if (value->type == RSG_VALUE_FLOAT)
+        glUniform1f(uniformLocation, value->asFloat);
+      if (value->type == RSG_VALUE_VEC3)
+        glUniform3fv(uniformLocation, 1, (GLfloat*)&value->asVec3);
+      if (value->type == RSG_VALUE_VEC4)
+        glUniform4fv(uniformLocation, 1, (GLfloat*)&value->asVec4);
+      if (value->type == RSG_VALUE_MAT4)
+        glUniformMatrix4fv(uniformLocation, 1, GL_FALSE,
+                           (GLfloat*)&value->asMat4);
     }
   }
 
   // draw
   glBindVertexArray(cnode->vao);
   glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, NULL);
-  glBindVertexArray(0);
 
+  /*
+   * TODO: Restore OpenGL state
+   */
+
+  // for now, just reset to zeroes
+  glBindVertexArray(0);
   glUseProgram(0);
 }
 
@@ -98,7 +122,7 @@ static GLuint generateTriangle(void) {
 static RsgMeshNode* create(void) {
   RsgMeshNode* node = rsgMalloc(sizeof(*node));
 
-  rsgNodeInit(&node->node);
+  rsgNodeSetDefaults(&node->node);
 
   // base
   node->node.getTypeFunc = getType;
