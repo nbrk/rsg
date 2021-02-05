@@ -33,7 +33,8 @@ static const char* vertex_0 =
     "void main()\n"
     "{\n"
     "//gl_Position = u_projection * u_view * u_model * vec4(a_position, 1.0);\n"
-    "gl_Position = vec4(a_position, 1.0);\n"
+    "gl_Position = u_projection * u_view * vec4(a_position, 1.0);\n"
+    "//gl_Position = vec4(a_position, 1.0);\n"
     "}\n"
     "\n";
 static const char* fragment_0 =
@@ -54,20 +55,22 @@ static void func(void* cookie) {
 int main(int argc, char** argv) {
   rsgInit(1024, 768, false);
 
-  RsgCallbackNode* cn1 = rsgCallbackNodeCreate(func, NULL);
+  RsgCallbackNode* cbn1 = rsgCallbackNodeCreate(func, NULL);
   RsgGroupNode* gn1 = rsgGroupNodeCreate();
   RsgMeshNode* mn1 = rsgMeshNodeCreateTriangle();
-  RsgShaderNode* sn1 = rsgShaderNodeCreate(vertex_0, fragment_0);
+  RsgShaderProgramNode* spn1 = rsgShaderProgramNodeCreate(vertex_0, fragment_0);
+  RsgCameraNode* camn1 = rsgCameraNodeCreatePerspectiveDefault(1024.f / 768.f);
 
   const char* names[] = {"u_int", "u_float", "u_diffuse_color"};
   RsgValue values[] = {
       rsgValueInt(100), rsgValueFloat(12.3f),
       rsgValueVec4((vec4s){.x = 0.f, .y = 1.0f, .z = 0.0f, .w = 1.f})};
-  RsgUniformSetterNode* un1 = rsgUniformSetterNodeCreate(names, values, 3);
+  RsgUniformSetterNode* usn1 = rsgUniformSetterNodeCreate(names, values, 3);
 
-  rsgGroupNodeAddChild(gn1, (RsgNode*)cn1);
-  rsgGroupNodeAddChild(gn1, (RsgNode*)un1);
-  rsgGroupNodeAddChild(gn1, (RsgNode*)sn1);
+  rsgGroupNodeAddChild(gn1, (RsgNode*)cbn1);
+  rsgGroupNodeAddChild(gn1, (RsgNode*)camn1);
+  rsgGroupNodeAddChild(gn1, (RsgNode*)usn1);
+  rsgGroupNodeAddChild(gn1, (RsgNode*)spn1);
   rsgGroupNodeAddChild(gn1, (RsgNode*)mn1);
 
   rsgMainLoop((RsgNode*)gn1);

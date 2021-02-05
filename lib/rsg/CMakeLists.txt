@@ -11,13 +11,14 @@ set(SRCS
   src/r_init.c
   src/r_local_context.c
   src/r_main_loop.c
+  src/r_shader_loader.c
   src/r_node.c
   src/r_callback_node.c
   src/r_group_node.c
   src/r_mesh_node.c
   src/r_uniform_setter_node.c
-  src/r_shader_node.c
-  src/r_shader_program.c
+  src/r_shader_program_node.c
+  src/r_camera_node.c
 
 #  src/r_main.c
 #  src/r_shader_program.c

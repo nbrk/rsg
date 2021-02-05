@@ -24,7 +24,7 @@
 extern GLuint rsgShaderProgramAssembleFromStrings(const char* vertex_str,
                                                   const char* fragment_str);
 
-struct RsgShaderNode {
+struct RsgShaderProgramNode {
   RsgNode node;
   GLuint program;
 };
@@ -36,11 +36,11 @@ static const char* getType(void) {
 static void process(RsgNode* node,
                     RsgLocalContext* lctx,
                     RsgGlobalContext* gctx) {
-  RsgShaderNode* cnode = (RsgShaderNode*)node;
+  RsgShaderProgramNode* cnode = (RsgShaderProgramNode*)node;
   lctx->program = cnode->program;
 }
 
-RsgShaderNode* rsgShaderNodeCreate(const char* vertexText,
+RsgShaderProgramNode* rsgShaderProgramNodeCreate(const char* vertexText,
                                    const char* fragmentText) {
   GLuint program = 0;
 
@@ -50,7 +50,7 @@ RsgShaderNode* rsgShaderNodeCreate(const char* vertexText,
   /*
    * Linking successful
    */
-  RsgShaderNode* node = rsgMalloc(sizeof(*node));
+  RsgShaderProgramNode* node = rsgMalloc(sizeof(*node));
 
   rsgNodeSetDefaults(&node->node);
 

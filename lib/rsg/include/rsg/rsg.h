@@ -93,7 +93,13 @@ typedef struct RsgUniformSetterNode RsgUniformSetterNode;
 /**
  * @brief Node that sets a shader program in the local context
  */
-typedef struct RsgShaderNode RsgShaderNode;
+typedef struct RsgShaderProgramNode RsgShaderProgramNode;
+
+/**
+ * @brief Convenience node that sets Model/View matrix uniforms in the local
+ * context and exposes them via property system
+ */
+typedef struct RsgCameraNode RsgCameraNode;
 
 /*******************************************************************************
  * FUNCTIONS.
@@ -163,5 +169,17 @@ extern RsgUniformSetterNode* rsgUniformSetterNodeCreate(const char** names,
 /*
  * Shader node functions
  */
-extern RsgShaderNode* rsgShaderNodeCreate(const char* vertexText,
-                                          const char* fragmentText);
+extern RsgShaderProgramNode* rsgShaderProgramNodeCreate(
+    const char* vertexText,
+    const char* fragmentText);
+
+/*
+ * Camera node functions
+ */
+extern RsgCameraNode* rsgCameraNodeCreatePerspectiveDefault(float aspect);
+extern RsgCameraNode* rsgCameraNodeCreateOrthographicDefault(float aspect);
+RsgCameraNode* rsgCameraNodeCreate(vec3s position,
+                                   vec3s target,
+                                   vec3s up,
+                                   float aspect,
+                                   bool perspective);
