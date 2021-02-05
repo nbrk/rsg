@@ -44,6 +44,7 @@
 typedef enum {
   RSG_VALUE_INT = 1,
   RSG_VALUE_FLOAT,
+  RSG_VALUE_VEC2,
   RSG_VALUE_VEC3,
   RSG_VALUE_VEC4,
   RSG_VALUE_MAT4,
@@ -57,6 +58,7 @@ typedef struct {
   union {
     int asInt;
     float asFloat;
+    vec2s asVec2;
     vec3s asVec3;
     vec4s asVec4;
     mat4s asMat4;
@@ -101,6 +103,11 @@ typedef struct RsgShaderProgramNode RsgShaderProgramNode;
  */
 typedef struct RsgCameraNode RsgCameraNode;
 
+/**
+ * @brief Node that changes its "x", "y", etc. properties on mouse motions
+ */
+typedef struct RsgTrackballManipulatorNode RsgTrackballManipulatorNode;
+
 /*******************************************************************************
  * FUNCTIONS.
  */
@@ -128,6 +135,7 @@ extern void rsgMainLoop(RsgNode* rootNode);
  */
 extern RsgValue rsgValueInt(int val);
 extern RsgValue rsgValueFloat(float val);
+extern RsgValue rsgValueVec2(vec2s val);
 extern RsgValue rsgValueVec3(vec3s val);
 extern RsgValue rsgValueVec4(vec4s val);
 extern RsgValue rsgValueMat4(mat4s val);
@@ -183,3 +191,8 @@ RsgCameraNode* rsgCameraNodeCreate(vec3s position,
                                    vec3s up,
                                    float aspect,
                                    bool perspective);
+
+/*
+ * Trackball manipulator node functions
+ */
+extern RsgTrackballManipulatorNode* rsgTrackballManipulatorNodeCreate(void);

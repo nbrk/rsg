@@ -60,6 +60,7 @@ int main(int argc, char** argv) {
   RsgMeshNode* mn1 = rsgMeshNodeCreateTriangle();
   RsgShaderProgramNode* spn1 = rsgShaderProgramNodeCreate(vertex_0, fragment_0);
   RsgCameraNode* camn1 = rsgCameraNodeCreatePerspectiveDefault(1024.f / 768.f);
+  RsgTrackballManipulatorNode* tbmn1 = rsgTrackballManipulatorNodeCreate();
 
   const char* names[] = {"u_int", "u_float", "u_diffuse_color"};
   RsgValue values[] = {
@@ -67,7 +68,10 @@ int main(int argc, char** argv) {
       rsgValueVec4((vec4s){.x = 0.f, .y = 1.0f, .z = 0.0f, .w = 1.f})};
   RsgUniformSetterNode* usn1 = rsgUniformSetterNodeCreate(names, values, 3);
 
+  rsgNodeConnectProperty(tbmn1, "delta_position", camn1, "position");
+
   rsgGroupNodeAddChild(gn1, (RsgNode*)cbn1);
+  rsgGroupNodeAddChild(gn1, (RsgNode*)tbmn1);
   rsgGroupNodeAddChild(gn1, (RsgNode*)camn1);
   rsgGroupNodeAddChild(gn1, (RsgNode*)usn1);
   rsgGroupNodeAddChild(gn1, (RsgNode*)spn1);

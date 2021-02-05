@@ -33,7 +33,7 @@ void rsgLocalContextSetUniform(RsgLocalContext* lctx,
   for (i = 0; i < lctx->numUniforms; i++) {
     if (strcmp(lctx->uniformNames[i], name) == 0) {
       lctx->uniformValues[i] = value;
-      printf("Local context: overwritten uniform '%s'\n", name);
+      //      printf("Local context: overwritten uniform '%s'\n", name);
       return;
     }
   }

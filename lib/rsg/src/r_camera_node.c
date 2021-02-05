@@ -93,23 +93,30 @@ static void setProperty(RsgNode* node, const char* name, RsgValue val) {
   RsgCameraNode* cnode = (RsgCameraNode*)node;
   // position vec3
   if (strcmp(name, "position") == 0) {
-    cnode->position = val.asVec3;
+    printf("Camera position update with value: %f, %f\n", val.asVec2.raw[0],
+           val.asVec2.raw[1]);
+    //    cnode->position = val.asVec3;
+    cnode->position = glms_vec3_add(val.asVec3, cnode->position);
     recalcMatrices(cnode);
+    return;
   }
   // target vec3
   if (strcmp(name, "target") == 0) {
     cnode->target = val.asVec3;
     recalcMatrices(cnode);
+    return;
   }
   // up vec3
   if (strcmp(name, "up") == 0) {
     cnode->up = val.asVec3;
     recalcMatrices(cnode);
+    return;
   }
   // aspect
   if (strcmp(name, "aspect") == 0) {
     cnode->aspect = val.asFloat;
     recalcMatrices(cnode);
+    return;
   }
 
   assert("Unknown property" && 0);

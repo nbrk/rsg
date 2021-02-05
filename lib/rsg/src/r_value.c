@@ -27,6 +27,9 @@ RsgValue rsgValueInt(int val) {
 RsgValue rsgValueFloat(float val) {
   return (RsgValue){.type = RSG_VALUE_FLOAT, .asFloat = val};
 }
+RsgValue rsgValueVec2(vec2s val) {
+  return (RsgValue){.type = RSG_VALUE_VEC2, .asVec2 = val};
+}
 RsgValue rsgValueVec3(vec3s val) {
   return (RsgValue){.type = RSG_VALUE_VEC3, .asVec3 = val};
 }

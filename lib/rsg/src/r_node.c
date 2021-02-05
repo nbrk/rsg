@@ -55,6 +55,13 @@ RsgValue rsgNodeGetProperty(RsgNode* node, const char* name) {
 
 void rsgNodeSetProperty(RsgNode* node, const char* name, RsgValue val) {
   node->setPropertyFunc(node, name, val);
+
+  // update connected properties
+  RsgPropertyConnection* conn;
+  STAILQ_FOREACH(conn, &node->propertyConnections, entries) {
+    if (strcmp(conn->name, name) == 0)
+      rsgNodeSetProperty(conn->targetNode, conn->targetName, val);
+  }
 }
 
 void rsgNodeConnectProperty(RsgNode* node,
