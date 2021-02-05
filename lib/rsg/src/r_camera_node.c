@@ -19,6 +19,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+#include <string.h>
 #include "rsg_internal.h"
 
 #define PROJECTION_ORTHO 1
@@ -38,6 +39,17 @@ struct RsgCameraNode {
   mat4s projectionMatrix;
 };
 
+static void recalcMatrices(RsgCameraNode* node) {
+  // view matrix
+  node->viewMatrix = glms_lookat(node->position, node->target, node->up);
+
+  // projection matrix
+  if (node->projection == PROJECTION_PERSP)
+    node->projectionMatrix = glms_perspective_default(node->aspect);
+  if (node->projection == PROJECTION_ORTHO)
+    node->projectionMatrix = glms_ortho_default(node->aspect);
+}
+
 static const char* getType(void) {
   return "RsgCameraNode";
 }
@@ -48,22 +60,59 @@ static void process(RsgNode* node,
   RsgCameraNode* cnode = (RsgCameraNode*)node;
 
   /*
-   * Set the well-known uniform matrices uniforms in the context. Use cache.
+   * Set the well-known uniform matrices in the context. Use cached values.
    */
   rsgLocalContextSetUniform(lctx, "u_view", rsgValueMat4(cnode->viewMatrix));
   rsgLocalContextSetUniform(lctx, "u_projection",
                             rsgValueMat4(cnode->projectionMatrix));
 }
 
-static void recalcMatrices(RsgCameraNode* node) {
-  // view matrix
-  node->viewMatrix = glms_lookat(node->position, node->target, node->up);
+static RsgValue getProperty(RsgNode* node, const char* name) {
+  RsgCameraNode* cnode = (RsgCameraNode*)node;
+  // position vec3
+  if (strcmp(name, "position") == 0) {
+    return rsgValueVec3(cnode->position);
+  }
+  // target vec3
+  if (strcmp(name, "target") == 0) {
+    return rsgValueVec3(cnode->target);
+  }
+  // up vec3
+  if (strcmp(name, "up") == 0) {
+    return rsgValueVec3(cnode->up);
+  }
+  // aspect
+  if (strcmp(name, "aspect") == 0) {
+    return rsgValueFloat(cnode->aspect);
+  }
 
-  // projection matrix
-  if (node->projection == PROJECTION_PERSP)
-    node->projectionMatrix = glms_perspective_default(node->aspect);
-  if (node->projection == PROJECTION_ORTHO)
-    node->projectionMatrix = glms_ortho_default(node->aspect);
+  assert("Unknown property" && 0);
+}
+
+static void setProperty(RsgNode* node, const char* name, RsgValue val) {
+  RsgCameraNode* cnode = (RsgCameraNode*)node;
+  // position vec3
+  if (strcmp(name, "position") == 0) {
+    cnode->position = val.asVec3;
+    recalcMatrices(cnode);
+  }
+  // target vec3
+  if (strcmp(name, "target") == 0) {
+    cnode->target = val.asVec3;
+    recalcMatrices(cnode);
+  }
+  // up vec3
+  if (strcmp(name, "up") == 0) {
+    cnode->up = val.asVec3;
+    recalcMatrices(cnode);
+  }
+  // aspect
+  if (strcmp(name, "aspect") == 0) {
+    cnode->aspect = val.asFloat;
+    recalcMatrices(cnode);
+  }
+
+  assert("Unknown property" && 0);
 }
 
 RsgCameraNode* rsgCameraNodeCreate(vec3s position,
@@ -77,6 +126,8 @@ RsgCameraNode* rsgCameraNodeCreate(vec3s position,
   // base
   node->node.getTypeFunc = getType;
   node->node.processFunc = process;
+  node->node.getPropertyFunc = getProperty;
+  node->node.setPropertyFunc = setProperty;
 
   // others
   node->position = position;
