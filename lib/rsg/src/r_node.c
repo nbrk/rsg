@@ -54,15 +54,26 @@ RsgValue rsgNodeGetProperty(RsgNode* node, const char* name) {
 }
 
 void rsgNodeSetProperty(RsgNode* node, const char* name, RsgValue val) {
+  // set our property
   node->setPropertyFunc(node, name, val);
 
   // update connected properties (use value adapters, if set)
   RsgPropertyConnection* conn;
   STAILQ_FOREACH(conn, &node->propertyConnections, entries) {
-    if (strcmp(conn->name, name) == 0)
-      rsgNodeSetProperty(
-          conn->targetNode, conn->targetName,
-          conn->adapterFunc == NULL ? val : conn->adapterFunc(val));
+    if (strcmp(conn->name, name) == 0) {
+      // just set the value if no conversions are needed
+      if (conn->numAdapterFuncs == 0)
+        rsgNodeSetProperty(conn->targetNode, conn->targetName, val);
+      else {
+        // apply all the adapters
+        RsgValue convertedVal = val;
+        size_t i;
+        for (i = 0; i < conn->numAdapterFuncs; i++)
+          convertedVal = conn->adapterFuncs[i](convertedVal);
+        // finally, set the converted value instead of val parameter
+        rsgNodeSetProperty(conn->targetNode, conn->targetName, convertedVal);
+      }
+    }
   }
 }
 
@@ -70,21 +81,23 @@ void rsgNodeConnectProperty(RsgNode* node,
                             const char* name,
                             RsgNode* targetNode,
                             const char* targetName) {
-  rsgNodeConnectPropertyWithAdapter(node, name, targetNode, targetName, NULL);
+  rsgNodeConnectPropertyWithAdapter(node, name, targetNode, targetName, NULL,
+                                    0);
 }
 
 void rsgNodeConnectPropertyWithAdapter(RsgNode* node,
                                        const char* name,
                                        RsgNode* targetNode,
                                        const char* targetName,
-                                       RsgValue (*adapter)(RsgValue val)) {
+                                       RsgValue (**funcs)(RsgValue val),
+                                       size_t nfuncs) {
   RsgPropertyConnection* conn;
   // check for existence of exactly the same connection
   STAILQ_FOREACH(conn, &node->propertyConnections, entries) {
     if (conn->targetNode == targetNode)
       if (strcmp(conn->name, name) == 0)
         if (strcmp(conn->targetName, targetName) == 0)
-          return;  // NOTE: no duplicate connections
+          return;  // NOTE: disallow duplicate connections
   }
 
   // just add the connection, even if the name prop doesn't exist in the target
@@ -92,6 +105,7 @@ void rsgNodeConnectPropertyWithAdapter(RsgNode* node,
   conn->name = name;
   conn->targetNode = targetNode;
   conn->targetName = targetName;
-  conn->adapterFunc = adapter;
+  conn->adapterFuncs = funcs;
+  conn->numAdapterFuncs = nfuncs;
   STAILQ_INSERT_TAIL(&node->propertyConnections, conn, entries);
 }

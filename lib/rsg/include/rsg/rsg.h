@@ -66,6 +66,11 @@ typedef struct {
 } RsgValue;
 
 /**
+ * @brief Function pointers used as adapters to convert Value data on the fly
+ */
+typedef RsgValue (*RsgValueAdapterFunc)(RsgValue);
+
+/**
  * @brief Opaque base node handle (every node must contain this at offset zero)
  */
 typedef struct RsgNode RsgNode;
@@ -131,7 +136,7 @@ extern void rsgInit(int width, int height, bool fullscreen);
 extern void rsgMainLoop(RsgNode* rootNode);
 
 /*
- * Value construction helpers
+ * Value construction/adaptation/conversion helpers
  */
 extern RsgValue rsgValueInt(int val);
 extern RsgValue rsgValueFloat(float val);
@@ -139,6 +144,8 @@ extern RsgValue rsgValueVec2(vec2s val);
 extern RsgValue rsgValueVec3(vec3s val);
 extern RsgValue rsgValueVec4(vec4s val);
 extern RsgValue rsgValueMat4(mat4s val);
+extern RsgValueAdapterFunc rsgValueAdapterVec2ProjectX(void);
+extern RsgValueAdapterFunc rsgValueAdapterVec2ProjectY(void);
 
 /*
  * Base node functions
@@ -150,12 +157,12 @@ extern void rsgNodeConnectProperty(RsgNode* node,
                                    const char* name,
                                    RsgNode* targetNode,
                                    const char* targetName);
-extern void rsgNodeConnectPropertyWithAdapter(
-    RsgNode* node,
-    const char* name,
-    RsgNode* targetNode,
-    const char* targetName,
-    RsgValue (*adapter)(RsgValue val));
+extern void rsgNodeConnectPropertyWithAdapter(RsgNode* node,
+                                              const char* name,
+                                              RsgNode* targetNode,
+                                              const char* targetName,
+                                              RsgValue (**funcs)(RsgValue),
+                                              size_t nfuncs);
 
 /*
  * Callback node functions

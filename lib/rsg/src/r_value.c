@@ -39,3 +39,21 @@ RsgValue rsgValueVec4(vec4s val) {
 RsgValue rsgValueMat4(mat4s val) {
   return (RsgValue){.type = RSG_VALUE_MAT4, .asMat4 = val};
 }
+
+/*
+ * TODO: closures?
+ */
+static RsgValue adapterVec2ProjectX(RsgValue val) {
+  return rsgValueFloat(val.asVec2.raw[0]);
+}
+
+static RsgValue adapterVec2ProjectY(RsgValue val) {
+  return rsgValueFloat(val.asVec2.raw[1]);
+}
+
+RsgValueAdapterFunc rsgValueAdapterVec2ProjectX(void) {
+  return adapterVec2ProjectX;
+}
+RsgValueAdapterFunc rsgValueAdapterVec2ProjectY(void) {
+  return adapterVec2ProjectY;
+}

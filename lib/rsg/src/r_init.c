@@ -31,6 +31,7 @@ void rsgInit(int width, int height, bool fullscreen) {
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+  glfwSwapInterval(1);  // TODO: what about the events?
   GLFWwindow* window = NULL;
   if (fullscreen == true) {
     window =
