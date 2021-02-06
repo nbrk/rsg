@@ -23,7 +23,7 @@
 
 RsgGlobalContext* rsgGlobalContext = NULL;
 
-void rsgInit(int width, int height, bool fullscreen) {
+void rsgInit(int width, int height, int flags) {
   assert(rsgGlobalContext == NULL);
   glfwInit();
 
@@ -33,13 +33,16 @@ void rsgInit(int width, int height, bool fullscreen) {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
   glfwSwapInterval(1);  // TODO: what about the events?
   GLFWwindow* window = NULL;
-  if (fullscreen == true) {
+  if ((flags & RSG_INIT_FLAG_FULLSCREEN) != 0) {
     window =
         glfwCreateWindow(mode->width, mode->height, "RSG/GLFW", monitor, NULL);
   } else {
     window = glfwCreateWindow(width, height, "RSG/GLFW", NULL, NULL);
   }
   glfwMakeContextCurrent(window);
+
+  if ((flags & RSG_INIT_FLAG_HIDECURSOR) != 0)
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
   glewExperimental = GL_TRUE;
   glewInit();

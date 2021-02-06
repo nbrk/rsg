@@ -35,6 +35,9 @@
 #define rsgRealloc(x, y) rsgReallocDbg(x, y, __FILE__, __LINE__)
 #define rsgFree(x) rsgFreeDbg(x, __FILE__, __LINE__)
 
+#define RSG_INIT_FLAG_FULLSCREEN 1
+#define RSG_INIT_FLAG_HIDECURSOR 2
+
 /*******************************************************************************
  * DATA.
  */
@@ -132,7 +135,7 @@ extern void rsgMallocPrintStat(void);
 /*
  * Initialization and main loop.
  */
-extern void rsgInit(int width, int height, bool fullscreen);
+extern void rsgInit(int width, int height, int flags);
 extern void rsgMainLoop(RsgNode* rootNode);
 
 /*

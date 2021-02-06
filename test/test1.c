@@ -52,13 +52,13 @@ static void func(void* cookie) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-static RsgValue reducerAdapter(RsgValue val) {
-  float f = 0.005f * val.asFloat;
+static RsgValue cameraAdapter(RsgValue val) {
+  float f = -0.001f * val.asFloat;
   return rsgValueFloat(f);
 }
 
 int main(int argc, char** argv) {
-  rsgInit(1024, 768, false);
+  rsgInit(1024, 768, RSG_INIT_FLAG_FULLSCREEN | RSG_INIT_FLAG_HIDECURSOR);
 
   RsgCallbackNode* cbn1 = rsgCallbackNodeCreate(func, NULL);
   RsgGroupNode* gn1 = rsgGroupNodeCreate();
@@ -75,12 +75,10 @@ int main(int argc, char** argv) {
 
   rsgNodeConnectPropertyWithAdapter(
       tbmn1, "xy_delta", camn1, "yaw_delta",
-      (RsgValueAdapterFunc[]){rsgValueAdapterVec2ProjectX(), reducerAdapter},
-      2);
+      (RsgValueAdapterFunc[]){rsgValueAdapterVec2ProjectX(), cameraAdapter}, 2);
   rsgNodeConnectPropertyWithAdapter(
       tbmn1, "xy_delta", camn1, "pitch_delta",
-      (RsgValueAdapterFunc[]){rsgValueAdapterVec2ProjectY(), reducerAdapter},
-      2);
+      (RsgValueAdapterFunc[]){rsgValueAdapterVec2ProjectY(), cameraAdapter}, 2);
 
   rsgGroupNodeAddChild(gn1, (RsgNode*)cbn1);
   rsgGroupNodeAddChild(gn1, (RsgNode*)tbmn1);
