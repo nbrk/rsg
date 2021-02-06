@@ -24,45 +24,22 @@
 
 #include <string.h>
 
-/*
- * Properties:
- * connect-only: "key_action": vec2 (key, action)
- */
-
-// NOTE: glfw3 callbacks do no provide cookie args, so use global node pointer
-static RsgKeyboardManipulatorNode* callbackNode = NULL;
-
-struct RsgKeyboardManipulatorNode {
+struct RsgClockNode {
   RsgNode node;
-  int lastKey;
-  int lastKeyAction;
 };
 
 static const char* getType(void) {
-  return "RsgKeyboardManipulatorNode";
+  return "RsgClockNode";
 }
 
 static void process(RsgNode* node,
                     RsgLocalContext* lctx,
                     RsgGlobalContext* gctx) {
-  RsgKeyboardManipulatorNode* cnode = (RsgKeyboardManipulatorNode*)node;
-  // connect-only property
-  rsgNodeSetProperty((RsgNode*)callbackNode, "key_action",
-                     rsgValueVec2((vec2s){(float)cnode->lastKey,
-                                          (float)cnode->lastKeyAction}));
+  RsgClockNode* cnode = (RsgClockNode*)node;
 }
 
-static void keyCallback(GLFWwindow* window,
-                        int key,
-                        int scancode,
-                        int action,
-                        int mods) {
-  callbackNode->lastKey = key;
-  callbackNode->lastKeyAction = action;
-}
-
-RsgKeyboardManipulatorNode* rsgKeyboardManipulatorNodeCreate(void) {
-  RsgKeyboardManipulatorNode* node = rsgMalloc(sizeof(*node));
+RsgClockNode* rsgClockNodeCreate(void) {
+  RsgClockNode* node = rsgMalloc(sizeof(*node));
   rsgNodeSetDefaults(&node->node);
 
   // base
@@ -70,11 +47,7 @@ RsgKeyboardManipulatorNode* rsgKeyboardManipulatorNodeCreate(void) {
   node->node.processFunc = process;
 
   // other data
-  node->lastKey = GLFW_KEY_UNKNOWN;
-  node->lastKeyAction = 0;
 
-  callbackNode = node;
-  glfwSetKeyCallback(rsgGlobalContextGet()->window, keyCallback);
 
   return node;
 }

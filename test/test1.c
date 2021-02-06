@@ -72,10 +72,10 @@ int main(int argc, char** argv) {
 
   rsgNodeConnectProperty((RsgNode*)tbmn1, "xy_delta", (RsgNode*)camn1,
                          "trackball_xy_delta_yaw_pitch");
-  rsgNodeConnectProperty((RsgNode*)kbmn1, "pressed_key", (RsgNode*)camn1,
-                         "keyboard_wasd_presses");
-  rsgNodeConnectProperty((RsgNode*)kbmn1, "released_key", (RsgNode*)camn1,
-                         "keyboard_wasd_releases");
+  rsgNodeConnectProperty((RsgNode*)kbmn1, "key_action", (RsgNode*)camn1,
+                         "keyboard_wasd_action");
+  //  rsgNodeConnectProperty((RsgNode*)kbmn1, "released_key", (RsgNode*)camn1,
+  //                         "keyboard_wasd_releases");
 
   rsgGroupNodeAddChild(gn1, (RsgNode*)cbn1);
   rsgGroupNodeAddChild(gn1, (RsgNode*)tbmn1);

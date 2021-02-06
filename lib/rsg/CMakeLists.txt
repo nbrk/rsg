@@ -22,6 +22,7 @@ set(SRCS
   src/r_camera_node.c
   src/r_trackball_manipulator_node.c
   src/r_keyboard_manipulator_node.c
+  src/r_clock_node.c
 
 #  src/r_main.c
 #  src/r_shader_program.c

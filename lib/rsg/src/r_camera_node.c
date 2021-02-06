@@ -38,9 +38,9 @@ struct RsgCameraNode {
   float farPlane;
 
   // position displacement vector components cache
-  float forward;
-  float strafe;
-  float jump;
+  //  float forward;
+  //  float strafe;
+  //  float jump;
 
   // matrix cache
   mat4s viewMatrix;
@@ -93,9 +93,9 @@ static void process(RsgNode* node,
                     RsgGlobalContext* gctx) {
   RsgCameraNode* cnode = (RsgCameraNode*)node;
 
-  // tweak the position if we have a displacement vector components set
-  if ((cnode->forward == cnode->strafe == cnode->jump == 0.0f) == false)
-    positionMoveBy(cnode, cnode->forward, cnode->strafe, cnode->jump);
+  //  // tweak the position if we have a displacement vector components set
+  //  if ((cnode->forward == cnode->strafe == cnode->jump == 0.0f) == false)
+  //    positionMoveBy(cnode, cnode->forward, cnode->strafe, cnode->jump);
 
   /*
    * Recalc view & projection matrices in any case (uses yaw, pitch, position).
@@ -175,30 +175,33 @@ static void setProperty(RsgNode* node, const char* name, RsgValue val) {
 
   // set-only property to couple with the kbd node: possibly set the x/z
   // components of the camera position displacement vector
-  if (strcmp(name, "keyboard_wasd_presses") == 0) {
-    int key = val.asInt;
+  if (strcmp(name, "keyboard_wasd_action") == 0) {
+    int key = (int)val.asVec2.raw[0];
+    int action = (int)val.asVec2.raw[1];
+    float forward = 0.0f;
+    float strafe = 0.0f;
     const float step = 0.1f;
-    if (key == GLFW_KEY_W)
-      cnode->forward = step;
-    if (key == GLFW_KEY_S)
-      cnode->forward = -step;
-    if (key == GLFW_KEY_A)
-      cnode->strafe = -step;
-    if (key == GLFW_KEY_D)
-      cnode->strafe = step;
-    return;
-  }
 
-  if (strcmp(name, "keyboard_wasd_releases") == 0) {
-    int key = val.asInt;
-    if (key == GLFW_KEY_W)
-      cnode->forward = 0.0f;
-    if (key == GLFW_KEY_S)
-      cnode->forward = 0.0f;
-    if (key == GLFW_KEY_A)
-      cnode->strafe = 0.0f;
-    if (key == GLFW_KEY_D)
-      cnode->strafe = 0.0f;
+    /*
+     * Other keys except the following are ignored
+     */
+    if (key == GLFW_KEY_W) {
+      forward = action == GLFW_RELEASE ? 0.0f : step;
+    }
+    if (key == GLFW_KEY_S) {
+      forward = action == GLFW_RELEASE ? 0.0f : -step;
+    }
+    if (key == GLFW_KEY_A) {
+      strafe = action == GLFW_RELEASE ? 0.0f : -step;
+    }
+    if (key == GLFW_KEY_D) {
+      strafe = action == GLFW_RELEASE ? 0.0f : step;
+    }
+
+    // only recalc position vector (do some matrix math) if it will be different
+    if (forward != 0.0f || strafe != 0.0f)
+      positionMoveBy(cnode, forward, strafe, 0.0f);
+
     return;
   }
 
@@ -242,9 +245,6 @@ RsgCameraNode* rsgCameraNodeCreate(vec3s position,
   node->nearPlane = nearPlane;
   node->farPlane = farPlane;
   node->projection = perspective ? PROJECTION_PERSP : PROJECTION_ORTHO;
-  node->forward = 0.0f;
-  node->strafe = 0.0f;
-  node->jump = 0.0f;
 
   // initally, calculate the matrices
   recalcMatrices(node);

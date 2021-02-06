@@ -121,6 +121,10 @@ typedef struct RsgTrackballManipulatorNode RsgTrackballManipulatorNode;
  */
 typedef struct RsgKeyboardManipulatorNode RsgKeyboardManipulatorNode;
 
+/**
+ * @brief Node that strobes the system
+ */
+typedef struct RsgClockNode RsgClockNode;
 /*******************************************************************************
  * FUNCTIONS.
  */
