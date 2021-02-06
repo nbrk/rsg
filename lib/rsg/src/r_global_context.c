@@ -19,36 +19,38 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 #include "rsg_internal.h"
 
-#include <stdio.h>
+static RsgGlobalContext* globalContext = NULL;
 
-void rsgMainLoop(RsgNode* rootNode) {
-  assert(rsgGlobalContextGet() != NULL);
+RsgGlobalContext* rsgGlobalContextGet(void) {
+  return globalContext;
+}
 
-  RsgLocalContext* lctx = rsgMalloc(sizeof(*lctx));
-  RsgGlobalContext* gctx = rsgGlobalContextGet();
+RsgGlobalContext* rsgGlobalContextCreate(GLFWwindow* window) {
+  assert(globalContext == NULL);
 
-  /*
-   * Process the node (presumably, a group or otherwise root node) using the
-   * global context and the volatile local context frequenly changing from node
-   * to node in a subtree.
-   */
-  while (glfwWindowShouldClose(gctx->window) == 0) {
-    glfwWaitEvents();
+  globalContext = rsgMalloc(sizeof(*globalContext));
+  globalContext->window = window;
+  globalContext->totalTraversals = 0;
+  return globalContext;
+}
 
-    // NOTE: start every traversal with a clean/default local context
-    rsgLocalContextSetDefaults(lctx);
+int rsgGetScreenWidth(void) {
+  assert(globalContext != NULL);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  int width;
+  int height;
+  glfwGetWindowSize(globalContext->window, &width, &height);
+  return width;
+}
 
-    // process given 'root' (probably recursive, if it is a group node or such)
-    rootNode->processFunc(rootNode, lctx, gctx);
-    gctx->totalTraversals++;
+int rsgGetScreenHeight(void) {
+  assert(globalContext != NULL);
 
-    glfwSwapBuffers(gctx->window);
-  }
-
-  printf("RSG: main loop done after %zu traversals\n", gctx->totalTraversals);
+  int width;
+  int height;
+  glfwGetWindowSize(globalContext->window, &width, &height);
+  return height;
 }

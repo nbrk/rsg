@@ -32,8 +32,6 @@ struct RsgCameraNode {
   vec3s position;
   float yaw;    // horizontal angle
   float pitch;  // vertical angle
-  float yaw_delta;
-  float pitch_delta;
   float aspect;
   float fov;  // field of view
   float nearPlane;
@@ -58,6 +56,27 @@ static void recalcMatrices(RsgCameraNode* node) {
     node->projectionMatrix = glms_perspective_default(node->aspect);
   if (node->projection == PROJECTION_ORTHO)
     node->projectionMatrix = glms_ortho_default(node->aspect);
+}
+
+static void positionMoveBy(RsgCameraNode* node,
+                           float forward,
+                           float strafe,
+                           float jump) {
+  vec3s direction = (vec3s){cos(node->pitch) * sin(node->yaw), sin(node->pitch),
+                            cos(node->pitch) * cos(node->yaw)};
+  vec3s right = (vec3s){sin(node->yaw - M_PI_2), 0, cos(node->pitch - M_PI_2)};
+  vec3s up = glms_cross(right, direction);
+
+  direction = glms_vec3_scale(direction, forward);
+  right = glms_vec3_scale(right, strafe);
+  up = glms_vec3_scale(up, jump);
+
+  vec3s newposition;
+  newposition = glms_vec3_add(node->position, direction);
+  newposition = glms_vec3_add(newposition, right);
+  newposition = glms_vec3_add(newposition, up);
+
+  node->position = newposition;
 }
 
 static const char* getType(void) {
@@ -104,7 +123,6 @@ static void setProperty(RsgNode* node, const char* name, RsgValue val) {
     printf("Camera position update with value: %f, %f\n", val.asVec2.raw[0],
            val.asVec2.raw[1]);
     cnode->position = val.asVec3;
-    //    cnode->position = glms_vec3_add(val.asVec3, cnode->position);
     recalcMatrices(cnode);
     return;
   }
@@ -118,18 +136,56 @@ static void setProperty(RsgNode* node, const char* name, RsgValue val) {
     recalcMatrices(cnode);
     return;
   }
+
+  // set-only property
   if (strcmp(name, "yaw_delta") == 0) {
-    cnode->yaw_delta = val.asFloat;
-    rsgNodeSetProperty(node, "yaw",
-                       rsgValueFloat(cnode->yaw + cnode->yaw_delta));
+    rsgNodeSetProperty(node, "yaw", rsgValueFloat(cnode->yaw + val.asFloat));
     return;
   }
+
+  // set-only property
   if (strcmp(name, "pitch_delta") == 0) {
-    cnode->pitch_delta = val.asFloat;
     rsgNodeSetProperty(node, "pitch",
-                       rsgValueFloat(cnode->pitch + cnode->pitch_delta));
+                       rsgValueFloat(cnode->pitch + val.asFloat));
     return;
   }
+
+  // convenience set-only property to couple the angles with our trackball node
+  if (strcmp(name, "trackball_xy_delta_yaw_pitch") == 0) {
+    float yawDelta = -0.001f * val.asVec2.raw[0];
+    float pitchDelta = -0.001f * val.asVec2.raw[1];
+    rsgNodeSetProperty(node, "yaw_delta", rsgValueFloat(yawDelta));
+    rsgNodeSetProperty(node, "pitch_delta", rsgValueFloat(pitchDelta));
+    return;
+  }
+
+  // set-only property to couple with our keyboard node
+  if (strcmp(name, "keyboard_wasd_position") == 0) {
+    int key = val.asInt;
+    float forward = 0.f;
+    float strafe = 0.f;
+    float jump = 0.f;
+    const float step = 0.1f;
+    if (key == GLFW_KEY_W)
+      forward = step;
+    if (key == GLFW_KEY_S)
+      forward = -step;
+    if (key == GLFW_KEY_A)
+      strafe = -step;
+    if (key == GLFW_KEY_D)
+      strafe = step;
+    if (key == GLFW_KEY_A)
+      strafe = -step;
+    if (key == GLFW_KEY_D)
+      strafe = step;
+
+    if ((forward == strafe == jump == 0.0f) == false) {
+      positionMoveBy(cnode, forward, strafe, jump);
+      recalcMatrices(cnode);
+    }
+    return;
+  }
+
   if (strcmp(name, "aspect") == 0) {
     cnode->aspect = val.asFloat;
     recalcMatrices(cnode);
@@ -164,9 +220,7 @@ RsgCameraNode* rsgCameraNodeCreate(vec3s position,
   // others
   node->position = position;
   node->yaw = horizAngle;
-  node->yaw_delta = 0.0f;
   node->pitch = vertAngle;
-  node->pitch_delta = 0.0f;
   node->fov = fov;
   node->aspect = aspect;
   node->nearPlane = nearPlane;

@@ -119,3 +119,16 @@ extern RsgLocalContext* rsgLocalContextCreateCopy(RsgLocalContext* origlctx);
  * @param lctx
  */
 extern void rsgLocalContextDestroy(RsgGlobalContext* lctx);
+
+/**
+ * @brief Allocate and create library global context
+ * @param window/OpenGL context to attach to
+ * @return
+ */
+extern RsgGlobalContext* rsgGlobalContextCreate(GLFWwindow* window);
+
+/**
+ * @brief Get pointer to the global context singleton
+ * @return
+ */
+extern RsgGlobalContext* rsgGlobalContextGet(void);

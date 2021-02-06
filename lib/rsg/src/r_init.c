@@ -21,10 +21,8 @@
  */
 #include "rsg_internal.h"
 
-RsgGlobalContext* rsgGlobalContext = NULL;
-
 void rsgInit(int width, int height, int flags) {
-  assert(rsgGlobalContext == NULL);
+  assert(rsgGlobalContextGet() == NULL);
   glfwInit();
 
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
@@ -40,6 +38,9 @@ void rsgInit(int width, int height, int flags) {
     window = glfwCreateWindow(width, height, "RSG/GLFW", NULL, NULL);
   }
   glfwMakeContextCurrent(window);
+  int realWidth, realHeight;
+  glfwGetWindowSize(window, &realWidth, &realHeight);
+  glfwSetCursorPos(window, (double)realWidth / 2.0, (double)realHeight / 2.0);
 
   if ((flags & RSG_INIT_FLAG_HIDECURSOR) != 0)
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
@@ -47,13 +48,12 @@ void rsgInit(int width, int height, int flags) {
   glewExperimental = GL_TRUE;
   glewInit();
 
-  printf("RSG: GLFW %s, GLEW %s, OpenGL context %s\n", glfwGetVersionString(),
+  printf("RSG: screen %dx%d, GLFW %s, GLEW %s\nRSG: OpenGL context %s\n",
+         realWidth, realHeight, glfwGetVersionString(),
          glewGetString(GLEW_VERSION), glGetString(GL_VERSION));
 
   /*
    * Create and configure the global context
    */
-  rsgGlobalContext = rsgMalloc(sizeof(*rsgGlobalContext));
-  rsgGlobalContext->window = window;
-  rsgGlobalContext->totalTraversals = 0;
+  (void)rsgGlobalContextCreate(window);
 }

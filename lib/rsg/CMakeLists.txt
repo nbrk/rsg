@@ -10,6 +10,7 @@ set(SRCS
   src/r_value.c
   src/r_init.c
   src/r_local_context.c
+  src/r_global_context.c
   src/r_main_loop.c
   src/r_shader_loader.c
   src/r_node.c
@@ -20,6 +21,7 @@ set(SRCS
   src/r_shader_program_node.c
   src/r_camera_node.c
   src/r_trackball_manipulator_node.c
+  src/r_keyboard_manipulator_node.c
 
 #  src/r_main.c
 #  src/r_shader_program.c

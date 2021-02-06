@@ -27,11 +27,9 @@ static const char* getType(void) {
   assert(0 && "Node getType function not set");
 }
 
-static void process(RsgNode* node,
-                    RsgLocalContext* lctx,
-                    RsgGlobalContext* gctx) {
-  assert(0 && "Node process function not set");
-}
+static void emptyProcess(RsgNode* node,
+                         RsgLocalContext* lctx,
+                         RsgGlobalContext* gctx) {}
 
 void rsgNodeSetDefaults(RsgNode* node) {
   // ops (some must be set in containing nodes)
@@ -39,7 +37,7 @@ void rsgNodeSetDefaults(RsgNode* node) {
   node->destroyFunc = NULL;
   node->getPropertyFunc = NULL;
   node->setPropertyFunc = NULL;
-  node->processFunc = process;
+  node->processFunc = emptyProcess;
 
   // other data
   STAILQ_INIT(&node->propertyConnections);
@@ -54,10 +52,11 @@ RsgValue rsgNodeGetProperty(RsgNode* node, const char* name) {
 }
 
 void rsgNodeSetProperty(RsgNode* node, const char* name, RsgValue val) {
-  // set our property
-  node->setPropertyFunc(node, name, val);
+  // set our property, if the set function is provided
+  if (node->setPropertyFunc != NULL)
+    node->setPropertyFunc(node, name, val);
 
-  // update connected properties (use value adapters, if set)
+  // anyways, update connected properties (use value adapters, if set)
   RsgPropertyConnection* conn;
   STAILQ_FOREACH(conn, &node->propertyConnections, entries) {
     if (strcmp(conn->name, name) == 0) {

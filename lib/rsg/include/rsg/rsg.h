@@ -116,6 +116,11 @@ typedef struct RsgCameraNode RsgCameraNode;
  */
 typedef struct RsgTrackballManipulatorNode RsgTrackballManipulatorNode;
 
+/**
+ * @brief Node that spews key scancodes (via props) on keyboard state changes
+ */
+typedef struct RsgKeyboardManipulatorNode RsgKeyboardManipulatorNode;
+
 /*******************************************************************************
  * FUNCTIONS.
  */
@@ -133,10 +138,12 @@ extern void rsgMallocSetDebug(bool value);
 extern void rsgMallocPrintStat(void);
 
 /*
- * Initialization and main loop.
+ * Initialization, library global parameters and main loop.
  */
 extern void rsgInit(int width, int height, int flags);
 extern void rsgMainLoop(RsgNode* rootNode);
+extern int rsgGetScreenWidth(void);
+extern int rsgGetScreenHeight(void);
 
 /*
  * Value construction/adaptation/conversion helpers
@@ -215,3 +222,8 @@ RsgCameraNode* rsgCameraNodeCreate(vec3s position,
  * Trackball manipulator node functions
  */
 extern RsgTrackballManipulatorNode* rsgTrackballManipulatorNodeCreate(void);
+
+/*
+ * Keyboard manipulator node functions
+ */
+extern RsgKeyboardManipulatorNode* rsgKeyboardManipulatorNodeCreate(void);

@@ -52,20 +52,17 @@ static void func(void* cookie) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-static RsgValue cameraAdapter(RsgValue val) {
-  float f = -0.001f * val.asFloat;
-  return rsgValueFloat(f);
-}
-
 int main(int argc, char** argv) {
-  rsgInit(1024, 768, RSG_INIT_FLAG_FULLSCREEN | RSG_INIT_FLAG_HIDECURSOR);
+  rsgInit(1024, 768, RSG_INIT_FLAG_FULLSCREEN);
 
   RsgCallbackNode* cbn1 = rsgCallbackNodeCreate(func, NULL);
   RsgGroupNode* gn1 = rsgGroupNodeCreate();
   RsgMeshNode* mn1 = rsgMeshNodeCreateTriangle();
   RsgShaderProgramNode* spn1 = rsgShaderProgramNodeCreate(vertex_0, fragment_0);
-  RsgCameraNode* camn1 = rsgCameraNodeCreatePerspectiveDefault(1024.f / 768.f);
+  RsgCameraNode* camn1 = rsgCameraNodeCreatePerspectiveDefault(
+      rsgGetScreenWidth() / rsgGetScreenHeight());
   RsgTrackballManipulatorNode* tbmn1 = rsgTrackballManipulatorNodeCreate();
+  RsgKeyboardManipulatorNode* kbmn1 = rsgKeyboardManipulatorNodeCreate();
 
   const char* names[] = {"u_int", "u_float", "u_diffuse_color"};
   RsgValue values[] = {
@@ -73,15 +70,16 @@ int main(int argc, char** argv) {
       rsgValueVec4((vec4s){.x = 0.f, .y = 1.0f, .z = 0.0f, .w = 1.f})};
   RsgUniformSetterNode* usn1 = rsgUniformSetterNodeCreate(names, values, 3);
 
-  rsgNodeConnectPropertyWithAdapter(
-      tbmn1, "xy_delta", camn1, "yaw_delta",
-      (RsgValueAdapterFunc[]){rsgValueAdapterVec2ProjectX(), cameraAdapter}, 2);
-  rsgNodeConnectPropertyWithAdapter(
-      tbmn1, "xy_delta", camn1, "pitch_delta",
-      (RsgValueAdapterFunc[]){rsgValueAdapterVec2ProjectY(), cameraAdapter}, 2);
+  rsgNodeConnectProperty((RsgNode*)tbmn1, "xy_delta", (RsgNode*)camn1,
+                         "trackball_xy_delta_yaw_pitch");
+  rsgNodeConnectProperty((RsgNode*)kbmn1, "pressed_key", (RsgNode*)camn1,
+                         "keyboard_wasd_position");
+  rsgNodeConnectProperty((RsgNode*)kbmn1, "repeated_key", (RsgNode*)camn1,
+                         "keyboard_wasd_position");
 
   rsgGroupNodeAddChild(gn1, (RsgNode*)cbn1);
   rsgGroupNodeAddChild(gn1, (RsgNode*)tbmn1);
+  rsgGroupNodeAddChild(gn1, (RsgNode*)kbmn1);
   rsgGroupNodeAddChild(gn1, (RsgNode*)camn1);
   rsgGroupNodeAddChild(gn1, (RsgNode*)usn1);
   rsgGroupNodeAddChild(gn1, (RsgNode*)spn1);

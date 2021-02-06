@@ -24,6 +24,9 @@
 
 #include <string.h>
 
+// NOTE: glfw3 callbacks do no provide cookie args, so use global node pointer
+static RsgTrackballManipulatorNode* callbackNode = NULL;
+
 struct RsgTrackballManipulatorNode {
   RsgNode node;
   vec2s currentPosition;
@@ -40,25 +43,22 @@ static void process(RsgNode* node,
                     RsgGlobalContext* gctx) {
   RsgTrackballManipulatorNode* cnode = (RsgTrackballManipulatorNode*)node;
 
-  double x, y;
-  glfwGetCursorPos(gctx->window, &x, &y);
-  vec2s currentPosition = (vec2s){(float)x, (float)y};
-  vec2s deltaPosition = (vec2s){0.0f, 0.0f};
-  if (cnode->hasCurrentPosition == true) {
-    // if we have previous sample, calculate the delta
-    deltaPosition = glms_vec2_sub(currentPosition, cnode->currentPosition);
-  }
+  //  double x, y;
+  //  glfwGetCursorPos(gctx->window, &x, &y);
+  //  vec2s currentPosition = (vec2s){(float)x, (float)y};
+  //  vec2s deltaPosition = (vec2s){0.0f, 0.0f};
+  //  if (cnode->hasCurrentPosition == true) {
+  //    // if we have previous sample, calculate the delta
+  //    deltaPosition = glms_vec2_sub(currentPosition, cnode->currentPosition);
+  //  }
 
-  /*
-   * Use the 'properties' machinery to update our values, possibly triggering
-   * updates in other nodes' properties.
-   */
-  rsgNodeSetProperty(node, "xy", rsgValueVec2(currentPosition));
-  rsgNodeSetProperty(node, "xy_delta", rsgValueVec2(deltaPosition));
-  //  rsgNodeSetProperty(node, "x", rsgValueFloat(currentPosition.raw[0]));
-  //  rsgNodeSetProperty(node, "y", rsgValueFloat(currentPosition.raw[1]));
-  //  rsgNodeSetProperty(node, "x_delta", rsgValueFloat(deltaPosition.raw[0]));
-  //  rsgNodeSetProperty(node, "y_delta", rsgValueFloat(deltaPosition.raw[1]));
+  //  /*
+  //   * Use the 'properties' machinery to update our values, possibly
+  //   triggering
+  //   * updates in other nodes' properties.
+  //   */
+  //  rsgNodeSetProperty(node, "xy", rsgValueVec2(cnode->currentPosition));
+  //  rsgNodeSetProperty(node, "xy_delta", rsgValueVec2(cnode->deltaPosition));
 }
 
 static RsgValue getProperty(RsgNode* node, const char* name) {
@@ -69,18 +69,6 @@ static RsgValue getProperty(RsgNode* node, const char* name) {
   if (strcmp(name, "xy_delta") == 0) {
     return rsgValueVec2(cnode->deltaPosition);
   }
-  //  if (strcmp(name, "x") == 0) {
-  //    return rsgValueFloat(cnode->currentPosition.raw[0]);
-  //  }
-  //  if (strcmp(name, "y") == 0) {
-  //    return rsgValueFloat(cnode->currentPosition.raw[1]);
-  //  }
-  //  if (strcmp(name, "x_delta") == 0) {
-  //    return rsgValueFloat(cnode->deltaPosition.raw[0]);
-  //  }
-  //  if (strcmp(name, "y_delta") == 0) {
-  //    return rsgValueFloat(cnode->deltaPosition.raw[1]);
-  //  }
   assert("Unknown property" && 0);
 }
 
@@ -88,32 +76,37 @@ static void setProperty(RsgNode* node, const char* name, RsgValue val) {
   RsgTrackballManipulatorNode* cnode = (RsgTrackballManipulatorNode*)node;
   if (strcmp(name, "xy") == 0) {
     cnode->currentPosition = val.asVec2;
-    cnode->hasCurrentPosition = true;
     return;
   }
   if (strcmp(name, "xy_delta") == 0) {
     cnode->deltaPosition = val.asVec2;
     return;
   }
-  //  if (strcmp(name, "x") == 0) {
-  //    cnode->currentPosition.raw[0] = val.asFloat;
-  //    cnode->hasCurrentPosition = true;
-  //    return;
-  //  }
-  //  if (strcmp(name, "y") == 0) {
-  //    cnode->currentPosition.raw[1] = val.asFloat;
-  //    cnode->hasCurrentPosition = true;
-  //    return;
-  //  }
-  //  if (strcmp(name, "x_delta") == 0) {
-  //    cnode->deltaPosition.raw[0] = val.asFloat;
-  //    return;
-  //  }
-  //  if (strcmp(name, "y_delta") == 0) {
-  //    cnode->deltaPosition.raw[1] = val.asFloat;
-  //    return;
-  //  }
   assert("Unknown property" && 0);
+}
+
+static void cursorPositionCallback(GLFWwindow* window,
+                                   double xpos,
+                                   double ypos) {
+  vec2s currentPosition = (vec2s){(float)xpos, (float)ypos};
+  vec2s deltaPosition = (vec2s){0.0f, 0.0f};
+  //  if (callbackNode->hasCurrentPosition == true) {
+  // if we have previous sample, calculate the delta
+  deltaPosition = glms_vec2_sub(currentPosition, callbackNode->currentPosition);
+  //  }
+
+  /*
+   * Use the 'properties' machinery to update our values, possibly triggering
+   * updates in other nodes' properties.
+   */
+  //  callbackNode->hasCurrentPosition = true;
+  rsgNodeSetProperty((RsgNode*)callbackNode, "xy",
+                     rsgValueVec2(currentPosition));
+  rsgNodeSetProperty((RsgNode*)callbackNode, "xy_delta",
+                     rsgValueVec2(deltaPosition));
+  //  callbackNode->currentPosition = currentPosition;
+  //  callbackNode->hasCurrentPosition = true;
+  //  callbackNode->deltaPosition = deltaPosition;
 }
 
 RsgTrackballManipulatorNode* rsgTrackballManipulatorNodeCreate(void) {
@@ -126,10 +119,22 @@ RsgTrackballManipulatorNode* rsgTrackballManipulatorNodeCreate(void) {
   node->node.getPropertyFunc = getProperty;
   node->node.setPropertyFunc = setProperty;
 
+  // FIXME: either this or the camera is buggy
   // other data
-  node->currentPosition = (vec2s){0.0f, 0.0f};
-  node->deltaPosition = (vec2s){0.0f, 0.0f};
-  node->hasCurrentPosition = false;
+  callbackNode = node;
+  double xpos, ypos;
+  glfwGetCursorPos(rsgGlobalContextGet()->window, &xpos, &ypos);
+  vec2s currentPosition = (vec2s){(float)xpos, (float)ypos};
+  vec2s deltaPosition = (vec2s){0.0f, 0.0f};
+  //  node->hasCurrentPosition = false;
 
+  rsgNodeSetProperty((RsgNode*)callbackNode, "xy",
+                     rsgValueVec2(currentPosition));
+  rsgNodeSetProperty((RsgNode*)callbackNode, "xy_delta",
+                     rsgValueVec2(deltaPosition));
+
+  // set mouse position callback
+  glfwSetCursorPosCallback(rsgGlobalContextGet()->window,
+                           cursorPositionCallback);
   return node;
 }
