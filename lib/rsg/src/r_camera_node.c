@@ -30,9 +30,14 @@ struct RsgCameraNode {
 
   int projection;
   vec3s position;
-  vec3s target;
-  vec3s up;
+  float yaw;    // horizontal angle
+  float pitch;  // vertical angle
+  float yaw_delta;
+  float pitch_delta;
   float aspect;
+  float fov;  // field of view
+  float nearPlane;
+  float farPlane;
 
   // matrix cache
   mat4s viewMatrix;
@@ -40,8 +45,13 @@ struct RsgCameraNode {
 };
 
 static void recalcMatrices(RsgCameraNode* node) {
-  // view matrix
-  node->viewMatrix = glms_lookat(node->position, node->target, node->up);
+  // view matrix: needs direction, right and up vectors
+  vec3s direction = (vec3s){cos(node->pitch) * sin(node->yaw), sin(node->pitch),
+                            cos(node->pitch) * cos(node->yaw)};
+  vec3s right = (vec3s){sin(node->yaw - M_PI_2), 0, cos(node->pitch - M_PI_2)};
+  vec3s up = glms_cross(right, direction);
+  node->viewMatrix =
+      glms_lookat(node->position, glms_vec3_add(node->position, direction), up);
 
   // projection matrix
   if (node->projection == PROJECTION_PERSP)
@@ -69,21 +79,20 @@ static void process(RsgNode* node,
 
 static RsgValue getProperty(RsgNode* node, const char* name) {
   RsgCameraNode* cnode = (RsgCameraNode*)node;
-  // position vec3
   if (strcmp(name, "position") == 0) {
     return rsgValueVec3(cnode->position);
   }
-  // target vec3
-  if (strcmp(name, "target") == 0) {
-    return rsgValueVec3(cnode->target);
+  if (strcmp(name, "yaw") == 0) {
+    return rsgValueFloat(cnode->yaw);
   }
-  // up vec3
-  if (strcmp(name, "up") == 0) {
-    return rsgValueVec3(cnode->up);
+  if (strcmp(name, "pitch") == 0) {
+    return rsgValueFloat(cnode->pitch);
   }
-  // aspect
   if (strcmp(name, "aspect") == 0) {
     return rsgValueFloat(cnode->aspect);
+  }
+  if (strcmp(name, "fov") == 0) {
+    return rsgValueFloat(cnode->fov);
   }
 
   assert("Unknown property" && 0);
@@ -91,30 +100,43 @@ static RsgValue getProperty(RsgNode* node, const char* name) {
 
 static void setProperty(RsgNode* node, const char* name, RsgValue val) {
   RsgCameraNode* cnode = (RsgCameraNode*)node;
-  // position vec3
   if (strcmp(name, "position") == 0) {
     printf("Camera position update with value: %f, %f\n", val.asVec2.raw[0],
            val.asVec2.raw[1]);
-    //    cnode->position = val.asVec3;
-    cnode->position = glms_vec3_add(val.asVec3, cnode->position);
+    cnode->position = val.asVec3;
+    //    cnode->position = glms_vec3_add(val.asVec3, cnode->position);
     recalcMatrices(cnode);
     return;
   }
-  // target vec3
-  if (strcmp(name, "target") == 0) {
-    cnode->target = val.asVec3;
+  if (strcmp(name, "yaw") == 0) {
+    cnode->yaw = val.asFloat;
     recalcMatrices(cnode);
     return;
   }
-  // up vec3
-  if (strcmp(name, "up") == 0) {
-    cnode->up = val.asVec3;
+  if (strcmp(name, "pitch") == 0) {
+    cnode->pitch = val.asFloat;
     recalcMatrices(cnode);
     return;
   }
-  // aspect
+  if (strcmp(name, "yaw_delta") == 0) {
+    cnode->yaw_delta = val.asFloat;
+    rsgNodeSetProperty(node, "yaw",
+                       rsgValueFloat(cnode->yaw + cnode->yaw_delta));
+    return;
+  }
+  if (strcmp(name, "pitch_delta") == 0) {
+    cnode->pitch_delta = val.asFloat;
+    rsgNodeSetProperty(node, "pitch",
+                       rsgValueFloat(cnode->pitch + cnode->pitch_delta));
+    return;
+  }
   if (strcmp(name, "aspect") == 0) {
     cnode->aspect = val.asFloat;
+    recalcMatrices(cnode);
+    return;
+  }
+  if (strcmp(name, "fov") == 0) {
+    cnode->fov = val.asFloat;
     recalcMatrices(cnode);
     return;
   }
@@ -123,9 +145,12 @@ static void setProperty(RsgNode* node, const char* name, RsgValue val) {
 }
 
 RsgCameraNode* rsgCameraNodeCreate(vec3s position,
-                                   vec3s target,
-                                   vec3s up,
+                                   float horizAngle,
+                                   float vertAngle,
+                                   float fov,
                                    float aspect,
+                                   float nearPlane,
+                                   float farPlane,
                                    bool perspective) {
   RsgCameraNode* node = rsgMalloc(sizeof(*node));
   rsgNodeSetDefaults(&node->node);
@@ -138,9 +163,14 @@ RsgCameraNode* rsgCameraNodeCreate(vec3s position,
 
   // others
   node->position = position;
-  node->target = target;
-  node->up = up;
+  node->yaw = horizAngle;
+  node->yaw_delta = 0.0f;
+  node->pitch = vertAngle;
+  node->pitch_delta = 0.0f;
+  node->fov = fov;
   node->aspect = aspect;
+  node->nearPlane = nearPlane;
+  node->farPlane = farPlane;
   node->projection = perspective ? PROJECTION_PERSP : PROJECTION_ORTHO;
 
   // initally, calculate the matrices
@@ -150,13 +180,11 @@ RsgCameraNode* rsgCameraNodeCreate(vec3s position,
 }
 
 RsgCameraNode* rsgCameraNodeCreatePerspectiveDefault(float aspect) {
-  return rsgCameraNodeCreate((vec3s){0.0f, 0.0f, 10.0f},
-                             (vec3s){0.0f, 0.0f, 0.0f},
-                             (vec3s){0.0f, 1.0f, 0.0f}, aspect, true);
+  return rsgCameraNodeCreate((vec3s){0.0f, 0.0f, 10.0f}, M_PI, 0.0f, 45.f,
+                             aspect, 0.1f, 1000.f, true);
 }
 
 RsgCameraNode* rsgCameraNodeCreateOrthographicDefault(float aspect) {
-  return rsgCameraNodeCreate((vec3s){0.0f, 0.0f, 10.0f},
-                             (vec3s){0.0f, 0.0f, 0.0f},
-                             (vec3s){0.0f, 1.0f, 0.0f}, aspect, false);
+  return rsgCameraNodeCreate((vec3s){0.0f, 0.0f, 10.0f}, M_PI, 0.0f, 45.f,
+                             aspect, 0.1f, 1000.f, false);
 }

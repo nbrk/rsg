@@ -66,6 +66,7 @@ struct RsgPropertyConnection {
   const char* name;
   RsgNode* targetNode;
   const char* targetName;
+  RsgValue (*adapterFunc)(RsgValue val);
   STAILQ_ENTRY(RsgPropertyConnection) entries;
 };
 

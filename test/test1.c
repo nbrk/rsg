@@ -52,6 +52,12 @@ static void func(void* cookie) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+static RsgValue yawPitchDeltaAdapter(RsgValue val) {
+  float yawDelta = 0.005f * val.asFloat;
+  printf("yaw/pitch delta adapter: val %f -> %f\n", val.asFloat, yawDelta);
+  return rsgValueFloat(yawDelta);
+}
+
 int main(int argc, char** argv) {
   rsgInit(1024, 768, false);
 
@@ -68,7 +74,10 @@ int main(int argc, char** argv) {
       rsgValueVec4((vec4s){.x = 0.f, .y = 1.0f, .z = 0.0f, .w = 1.f})};
   RsgUniformSetterNode* usn1 = rsgUniformSetterNodeCreate(names, values, 3);
 
-  rsgNodeConnectProperty(tbmn1, "delta_position", camn1, "position");
+  rsgNodeConnectPropertyWithAdapter(tbmn1, "x_delta", camn1, "yaw_delta",
+                                    yawPitchDeltaAdapter);
+  rsgNodeConnectPropertyWithAdapter(tbmn1, "y_delta", camn1, "pitch_delta",
+                                    yawPitchDeltaAdapter);
 
   rsgGroupNodeAddChild(gn1, (RsgNode*)cbn1);
   rsgGroupNodeAddChild(gn1, (RsgNode*)tbmn1);

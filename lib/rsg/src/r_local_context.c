@@ -52,8 +52,8 @@ void rsgLocalContextSetUniform(RsgLocalContext* lctx,
   lctx->numUniforms += 1;
   lctx->uniformNames[uniformIndex] = name;
   lctx->uniformValues[uniformIndex] = value;
-  printf("Local context: inserted uniform '%s' (%zu/%d)\n", name,
-         lctx->numUniforms, RSG_LOCAL_CONTEXT_MAX_UNIFORMS);
+  //  printf("Local context: inserted uniform '%s' (%zu/%d)\n", name,
+  //         lctx->numUniforms, RSG_LOCAL_CONTEXT_MAX_UNIFORMS);
 }
 
 void rsgLocalContextSetDefaults(RsgLocalContext* lctx) {
@@ -85,6 +85,6 @@ RsgLocalContext* rsgLocalContextCreateCopy(RsgLocalContext* origlctx) {
 }
 
 void rsgLocalContextDestroy(RsgGlobalContext* lctx) {
-  // NOTE: no indirection, just free the whole lctx memory block
+  // NOTE: there is no indirection, just free the whole lctx memory block
   rsgFree(lctx);
 }

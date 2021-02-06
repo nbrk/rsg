@@ -23,6 +23,7 @@
 #include "rsg_internal.h"
 
 #include <stdio.h>
+#include <string.h>
 
 struct RsgUniformSetterNode {
   RsgNode node;
@@ -50,6 +51,31 @@ static void process(RsgNode* node,
   }
 }
 
+static RsgValue getProperty(RsgNode* node, const char* name) {
+  RsgUniformSetterNode* cnode = (RsgUniformSetterNode*)node;
+  /*
+   * Look through our uniforms and make them available as properties
+   */
+  size_t i;
+  for (i = 0; i < cnode->numUniforms; i++) {
+    if (strcmp(name, cnode->uniformNames[i]) == 0)
+      return cnode->uniformValues[i];
+  }
+  assert("Unknown property" && 0);
+}
+
+static void setProperty(RsgNode* node, const char* name, RsgValue val) {
+  RsgUniformSetterNode* cnode = (RsgUniformSetterNode*)node;
+  size_t i;
+  for (i = 0; i < cnode->numUniforms; i++) {
+    if (strcmp(name, cnode->uniformNames[i]) == 0) {
+      cnode->uniformValues[i] = val;
+      return;
+    }
+  }
+  assert("Unknown property" && 0);
+}
+
 RsgUniformSetterNode* rsgUniformSetterNodeCreate(const char** names,
                                                  RsgValue* values,
                                                  size_t numValues) {
@@ -61,8 +87,10 @@ RsgUniformSetterNode* rsgUniformSetterNodeCreate(const char** names,
   // base
   node->node.getTypeFunc = getType;
   node->node.processFunc = process;
+  node->node.getPropertyFunc = getProperty;
+  node->node.setPropertyFunc = setProperty;
 
-  // copy uniform names/values
+  // copy uniform names/values from the function args
   node->numUniforms = numValues;
   size_t i;
   for (i = 0; i < numValues; i++) {

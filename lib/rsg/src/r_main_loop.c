@@ -27,7 +27,6 @@ extern RsgGlobalContext* rsgGlobalContext;
 
 void rsgMainLoop(RsgNode* rootNode) {
   RsgLocalContext* lctx = rsgMalloc(sizeof(*lctx));
-  rsgLocalContextSetDefaults(lctx);
 
   RsgGlobalContext* gctx = rsgGlobalContext;
 
@@ -39,9 +38,13 @@ void rsgMainLoop(RsgNode* rootNode) {
   while (glfwWindowShouldClose(gctx->window) == 0) {
     glfwWaitEvents();
 
+    // NOTE: start every traversal with a clean/default local context
+    rsgLocalContextSetDefaults(lctx);
+
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // process given 'root' (probably recursive, if it is a group node or such)
     rootNode->processFunc(rootNode, lctx, gctx);
     gctx->totalTraversals++;
 

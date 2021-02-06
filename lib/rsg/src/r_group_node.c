@@ -32,6 +32,7 @@ struct RsgGroupNode {
   RsgNode node;
   STAILQ_HEAD(, RsgGroupNodeChild) children;
   size_t childrenCount;
+  RsgLocalContext* lctx_backup;
 };
 
 static const char* getType(void) {
@@ -49,8 +50,7 @@ static void process(RsgNode* node,
 
   // make a copy of the local context to be restored upon finish of children
   // processing
-  RsgLocalContext* lctx_backup = rsgMalloc(sizeof(*lctx_backup));
-  *lctx_backup = *lctx;
+  *cnode->lctx_backup = *lctx;
 
   // process children from left to right
   RsgGroupNodeChild* child;
@@ -58,12 +58,19 @@ static void process(RsgNode* node,
     child->node->processFunc(child->node, lctx, gctx);
   }
 
-  // restore local/subtree context after all children are done, so the local ctx
-  // changes do not propagate back up over into the tree (e.g. to siblings of
-  // the group node)
-  // TODO: deep clone the lctx (with all its uniform slists, etc..)
-  //  *lctx = *lctx_backup;
-  rsgFree(lctx_backup);
+  /*
+   * Restore local/subtree context after all children are done, so the local
+   * ctx changes do not propagate back up over into the tree (e.g. to siblings
+   * of the group node)
+   */
+  // WARNING: deep clone the lctx
+  *lctx = *cnode->lctx_backup;
+}
+
+static void destroy(RsgNode* node) {
+  RsgGroupNode* cnode = (RsgGroupNode*)node;
+
+  rsgFree(cnode->lctx_backup);
 }
 
 RsgGroupNode* rsgGroupNodeCreate(void) {
@@ -73,10 +80,12 @@ RsgGroupNode* rsgGroupNodeCreate(void) {
   // base
   node->node.getTypeFunc = getType;
   node->node.processFunc = process;
+  node->node.destroyFunc = destroy;
 
   // other data
   STAILQ_INIT(&node->children);
   node->childrenCount = 0;
+  node->lctx_backup = rsgMalloc(sizeof(*node->lctx_backup));
 
   return node;
 }

@@ -150,6 +150,12 @@ extern void rsgNodeConnectProperty(RsgNode* node,
                                    const char* name,
                                    RsgNode* targetNode,
                                    const char* targetName);
+extern void rsgNodeConnectPropertyWithAdapter(
+    RsgNode* node,
+    const char* name,
+    RsgNode* targetNode,
+    const char* targetName,
+    RsgValue (*adapter)(RsgValue val));
 
 /*
  * Callback node functions
@@ -187,9 +193,12 @@ extern RsgShaderProgramNode* rsgShaderProgramNodeCreate(
 extern RsgCameraNode* rsgCameraNodeCreatePerspectiveDefault(float aspect);
 extern RsgCameraNode* rsgCameraNodeCreateOrthographicDefault(float aspect);
 RsgCameraNode* rsgCameraNodeCreate(vec3s position,
-                                   vec3s target,
-                                   vec3s up,
+                                   float horizAngle,
+                                   float vertAngle,
+                                   float fov,
                                    float aspect,
+                                   float nearPlane,
+                                   float farPlane,
                                    bool perspective);
 
 /*

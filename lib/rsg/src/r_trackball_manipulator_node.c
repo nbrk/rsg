@@ -49,32 +49,51 @@ static void process(RsgNode* node,
     deltaPosition = glms_vec2_sub(currentPosition, cnode->currentPosition);
   }
 
-  // use property machinery to update our values, possibly triggering updates in
-  // other nodes' properties
-  rsgNodeSetProperty(node, "position", rsgValueVec2(currentPosition));
-  rsgNodeSetProperty(node, "delta_position", rsgValueVec2(deltaPosition));
+  /*
+   * Use the 'properties' machinery to update our values, possibly triggering
+   * updates in other nodes' properties.
+   */
+  rsgNodeSetProperty(node, "x", rsgValueFloat(currentPosition.raw[0]));
+  rsgNodeSetProperty(node, "y", rsgValueFloat(currentPosition.raw[1]));
+  rsgNodeSetProperty(node, "x_delta", rsgValueFloat(deltaPosition.raw[0]));
+  rsgNodeSetProperty(node, "y_delta", rsgValueFloat(deltaPosition.raw[1]));
 }
 
 static RsgValue getProperty(RsgNode* node, const char* name) {
   RsgTrackballManipulatorNode* cnode = (RsgTrackballManipulatorNode*)node;
-  if (strcmp(name, "position") == 0) {
-    return rsgValueVec2(cnode->currentPosition);
+  if (strcmp(name, "x") == 0) {
+    return rsgValueFloat(cnode->currentPosition.raw[0]);
   }
-  if (strcmp(name, "delta_position") == 0) {
-    return rsgValueVec2(cnode->deltaPosition);
+  if (strcmp(name, "y") == 0) {
+    return rsgValueFloat(cnode->currentPosition.raw[1]);
+  }
+  if (strcmp(name, "x_delta") == 0) {
+    return rsgValueFloat(cnode->deltaPosition.raw[0]);
+  }
+  if (strcmp(name, "y_delta") == 0) {
+    return rsgValueFloat(cnode->deltaPosition.raw[1]);
   }
   assert("Unknown property" && 0);
 }
 
 static void setProperty(RsgNode* node, const char* name, RsgValue val) {
   RsgTrackballManipulatorNode* cnode = (RsgTrackballManipulatorNode*)node;
-  if (strcmp(name, "position") == 0) {
-    cnode->currentPosition = val.asVec2;
+  if (strcmp(name, "x") == 0) {
+    cnode->currentPosition.raw[0] = val.asFloat;
     cnode->hasCurrentPosition = true;
     return;
   }
-  if (strcmp(name, "delta_position") == 0) {
-    cnode->deltaPosition = val.asVec2;
+  if (strcmp(name, "y") == 0) {
+    cnode->currentPosition.raw[1] = val.asFloat;
+    cnode->hasCurrentPosition = true;
+    return;
+  }
+  if (strcmp(name, "x_delta") == 0) {
+    cnode->deltaPosition.raw[0] = val.asFloat;
+    return;
+  }
+  if (strcmp(name, "y_delta") == 0) {
+    cnode->deltaPosition.raw[1] = val.asFloat;
     return;
   }
   assert("Unknown property" && 0);

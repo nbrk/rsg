@@ -56,11 +56,13 @@ RsgValue rsgNodeGetProperty(RsgNode* node, const char* name) {
 void rsgNodeSetProperty(RsgNode* node, const char* name, RsgValue val) {
   node->setPropertyFunc(node, name, val);
 
-  // update connected properties
+  // update connected properties (use value adapters, if set)
   RsgPropertyConnection* conn;
   STAILQ_FOREACH(conn, &node->propertyConnections, entries) {
     if (strcmp(conn->name, name) == 0)
-      rsgNodeSetProperty(conn->targetNode, conn->targetName, val);
+      rsgNodeSetProperty(
+          conn->targetNode, conn->targetName,
+          conn->adapterFunc == NULL ? val : conn->adapterFunc(val));
   }
 }
 
@@ -68,7 +70,16 @@ void rsgNodeConnectProperty(RsgNode* node,
                             const char* name,
                             RsgNode* targetNode,
                             const char* targetName) {
+  rsgNodeConnectPropertyWithAdapter(node, name, targetNode, targetName, NULL);
+}
+
+void rsgNodeConnectPropertyWithAdapter(RsgNode* node,
+                                       const char* name,
+                                       RsgNode* targetNode,
+                                       const char* targetName,
+                                       RsgValue (*adapter)(RsgValue val)) {
   RsgPropertyConnection* conn;
+  // check for existence of exactly the same connection
   STAILQ_FOREACH(conn, &node->propertyConnections, entries) {
     if (conn->targetNode == targetNode)
       if (strcmp(conn->name, name) == 0)
@@ -76,9 +87,11 @@ void rsgNodeConnectProperty(RsgNode* node,
           return;  // NOTE: no duplicate connections
   }
 
+  // just add the connection, even if the name prop doesn't exist in the target
   conn = rsgMalloc(sizeof(*conn));
   conn->name = name;
   conn->targetNode = targetNode;
   conn->targetName = targetName;
+  conn->adapterFunc = adapter;
   STAILQ_INSERT_TAIL(&node->propertyConnections, conn, entries);
 }
