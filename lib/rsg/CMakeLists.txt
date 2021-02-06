@@ -24,15 +24,6 @@ set(SRCS
   src/r_keyboard_manipulator_node.c
   src/r_clock_node.c
 
-#  src/r_main.c
-#  src/r_shader_program.c
-#  src/r_node.c
-#  src/r_data_node.c
-#  src/r_group_node.c
-#  src/r_code_node.c
-#  src/r_mesh_node.c
-#  src/r_shader_program_node.c
-#  src/r_shader_uniform_node.c
   )
 
 set(NAME rsg)

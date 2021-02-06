@@ -145,7 +145,15 @@ extern void rsgMallocPrintStat(void);
  * Initialization, library global parameters and main loop.
  */
 extern void rsgInit(int width, int height, int flags);
-extern void rsgMainLoop(RsgNode* rootNode);
+/**
+ * @brief Enter the main event loop. The tree is traversed in response to the
+ * backend events or automatically `traverseFreq' times per second
+ * @param rootNode
+ * @param traverseFreq if zero, then run in "retained mode" which only traverses
+ * the tree when the GUI/inputs is changed. Otherwise, run in "immediate mode"
+ * and traverse the tree `traverseFreq' times per second.
+ */
+extern void rsgMainLoop(RsgNode* rootNode, int traverseFreq);
 extern int rsgGetScreenWidth(void);
 extern int rsgGetScreenHeight(void);
 

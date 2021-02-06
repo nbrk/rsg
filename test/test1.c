@@ -53,7 +53,7 @@ static void func(void* cookie) {
 }
 
 int main(int argc, char** argv) {
-  rsgInit(1024, 768, RSG_INIT_FLAG_FULLSCREEN);
+  rsgInit(1024, 768, 0);
 
   RsgCallbackNode* cbn1 = rsgCallbackNodeCreate(func, NULL);
   RsgGroupNode* gn1 = rsgGroupNodeCreate();
@@ -85,7 +85,8 @@ int main(int argc, char** argv) {
   rsgGroupNodeAddChild(gn1, (RsgNode*)spn1);
   rsgGroupNodeAddChild(gn1, (RsgNode*)mn1);
 
-  rsgMainLoop((RsgNode*)gn1);
+  //  rsgMainLoop((RsgNode*)gn1, 60); // autotraverse
+  rsgMainLoop((RsgNode*)gn1, 0);
 
   return 0;
 }

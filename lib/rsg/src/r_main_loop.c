@@ -22,32 +22,54 @@
 #include "rsg_internal.h"
 
 #include <stdio.h>
+#include <unistd.h>
 
-void rsgMainLoop(RsgNode* rootNode) {
+void rsgMainLoop(RsgNode* rootNode, int traverseFreq) {
   assert(rsgGlobalContextGet() != NULL);
 
   RsgLocalContext* lctx = rsgMalloc(sizeof(*lctx));
   RsgGlobalContext* gctx = rsgGlobalContextGet();
 
-  /*
-   * Process the node (presumably, a group or otherwise root node) using the
-   * global context and the volatile local context frequenly changing from node
-   * to node in a subtree.
-   */
-  while (glfwWindowShouldClose(gctx->window) == 0) {
-    glfwWaitEvents();
+  if (traverseFreq <= 0) {
+    // event-driven retained mode
+    /*
+     * Process the node (presumably, a group or otherwise root node) using the
+     * global context and the volatile local context frequenly changing from
+     * node to node in a subtree.
+     */
+    while (glfwWindowShouldClose(gctx->window) == 0) {
+      glfwWaitEvents();
 
-    // NOTE: start every traversal with a clean/default local context
-    rsgLocalContextSetDefaults(lctx);
+      // NOTE: start every traversal with a clean/default local context
+      rsgLocalContextSetDefaults(lctx);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // process given 'root' (probably recursive, if it is a group node or such)
-    rootNode->processFunc(rootNode, lctx, gctx);
-    gctx->totalTraversals++;
+      // process given 'root' (probably recursive, if it is a group node or
+      // such)
+      rootNode->processFunc(rootNode, lctx, gctx);
+      gctx->totalTraversals++;
 
-    glfwSwapBuffers(gctx->window);
+      glfwSwapBuffers(gctx->window);
+    }
+  } else {
+    // immediate mode
+    useconds_t period = (int)(1 / traverseFreq) * 1000000;
+    while (glfwWindowShouldClose(gctx->window) == 0) {
+      glfwPollEvents();
+
+      rsgLocalContextSetDefaults(lctx);
+
+      glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      rootNode->processFunc(rootNode, lctx, gctx);
+      gctx->totalTraversals++;
+
+      glfwSwapBuffers(gctx->window);
+      usleep(period);
+    }
   }
 
   printf("RSG: main loop done after %zu traversals\n", gctx->totalTraversals);
