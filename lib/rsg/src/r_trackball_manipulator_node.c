@@ -57,8 +57,8 @@ static void process(RsgNode* node,
   //   triggering
   //   * updates in other nodes' properties.
   //   */
-  //  rsgNodeSetProperty(node, "xy", rsgValueVec2(cnode->currentPosition));
-  //  rsgNodeSetProperty(node, "xy_delta", rsgValueVec2(cnode->deltaPosition));
+  rsgNodeSetProperty(node, "xy", rsgValueVec2(cnode->currentPosition));
+  rsgNodeSetProperty(node, "xy_delta", rsgValueVec2(cnode->deltaPosition));
 }
 
 static RsgValue getProperty(RsgNode* node, const char* name) {
@@ -89,24 +89,11 @@ static void cursorPositionCallback(GLFWwindow* window,
                                    double xpos,
                                    double ypos) {
   vec2s currentPosition = (vec2s){(float)xpos, (float)ypos};
-  vec2s deltaPosition = (vec2s){0.0f, 0.0f};
-  //  if (callbackNode->hasCurrentPosition == true) {
-  // if we have previous sample, calculate the delta
-  deltaPosition = glms_vec2_sub(currentPosition, callbackNode->currentPosition);
-  //  }
+  vec2s deltaPosition =
+      glms_vec2_sub(currentPosition, callbackNode->currentPosition);
 
-  /*
-   * Use the 'properties' machinery to update our values, possibly triggering
-   * updates in other nodes' properties.
-   */
-  //  callbackNode->hasCurrentPosition = true;
-  rsgNodeSetProperty((RsgNode*)callbackNode, "xy",
-                     rsgValueVec2(currentPosition));
-  rsgNodeSetProperty((RsgNode*)callbackNode, "xy_delta",
-                     rsgValueVec2(deltaPosition));
-  //  callbackNode->currentPosition = currentPosition;
-  //  callbackNode->hasCurrentPosition = true;
-  //  callbackNode->deltaPosition = deltaPosition;
+  callbackNode->currentPosition = currentPosition;
+  callbackNode->deltaPosition = deltaPosition;
 }
 
 RsgTrackballManipulatorNode* rsgTrackballManipulatorNodeCreate(void) {
@@ -119,22 +106,17 @@ RsgTrackballManipulatorNode* rsgTrackballManipulatorNodeCreate(void) {
   node->node.getPropertyFunc = getProperty;
   node->node.setPropertyFunc = setProperty;
 
-  // FIXME: either this or the camera is buggy
   // other data
   callbackNode = node;
   double xpos, ypos;
   glfwGetCursorPos(rsgGlobalContextGet()->window, &xpos, &ypos);
-  vec2s currentPosition = (vec2s){(float)xpos, (float)ypos};
-  vec2s deltaPosition = (vec2s){0.0f, 0.0f};
-  //  node->hasCurrentPosition = false;
-
-  rsgNodeSetProperty((RsgNode*)callbackNode, "xy",
-                     rsgValueVec2(currentPosition));
-  rsgNodeSetProperty((RsgNode*)callbackNode, "xy_delta",
-                     rsgValueVec2(deltaPosition));
+  // FIXME: either this or the camera is buggy
+  node->currentPosition = (vec2s){(float)xpos, (float)ypos};
+  node->deltaPosition = (vec2s){0.0f, 0.0f};
 
   // set mouse position callback
   glfwSetCursorPosCallback(rsgGlobalContextGet()->window,
                            cursorPositionCallback);
+
   return node;
 }

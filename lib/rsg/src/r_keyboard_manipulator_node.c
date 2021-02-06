@@ -37,11 +37,11 @@ static const char* getType(void) {
   return "RsgKeyboardManipulatorNode";
 }
 
-// static void process(RsgNode* node,
-//                    RsgLocalContext* lctx,
-//                    RsgGlobalContext* gctx) {
-//  RsgKeyboardManipulatorNode* cnode = (RsgKeyboardManipulatorNode*)node;
-//}
+static void process(RsgNode* node,
+                    RsgLocalContext* lctx,
+                    RsgGlobalContext* gctx) {
+  RsgKeyboardManipulatorNode* cnode = (RsgKeyboardManipulatorNode*)node;
+}
 
 // static RsgValue getProperty(RsgNode* node, const char* name) {
 //  RsgKeyboardManipulatorNode* cnode = (RsgKeyboardManipulatorNode*)node;
@@ -91,7 +91,7 @@ RsgKeyboardManipulatorNode* rsgKeyboardManipulatorNodeCreate(void) {
 
   // base
   node->node.getTypeFunc = getType;
-  //  node->node.processFunc = process;
+  node->node.processFunc = process;
   //  node->node.getPropertyFunc = getProperty;
   //  node->node.setPropertyFunc = setProperty;
 

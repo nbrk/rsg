@@ -27,9 +27,11 @@ static const char* getType(void) {
   assert(0 && "Node getType function not set");
 }
 
-static void emptyProcess(RsgNode* node,
-                         RsgLocalContext* lctx,
-                         RsgGlobalContext* gctx) {}
+static void process(RsgNode* node,
+                    RsgLocalContext* lctx,
+                    RsgGlobalContext* gctx) {
+  assert(0 && "Node process function not set");
+}
 
 void rsgNodeSetDefaults(RsgNode* node) {
   // ops (some must be set in containing nodes)
@@ -37,7 +39,7 @@ void rsgNodeSetDefaults(RsgNode* node) {
   node->destroyFunc = NULL;
   node->getPropertyFunc = NULL;
   node->setPropertyFunc = NULL;
-  node->processFunc = emptyProcess;
+  node->processFunc = process;
 
   // other data
   STAILQ_INIT(&node->propertyConnections);
