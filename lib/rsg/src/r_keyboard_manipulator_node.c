@@ -52,6 +52,15 @@ static void process(RsgNode* node,
                                           (float)cnode->lastKeyAction}));
 }
 
+static void setProperty(RsgNode* node, const char* name, RsgValue val) {
+  RsgKeyboardManipulatorNode* cnode = (RsgKeyboardManipulatorNode*)node;
+  if (strcmp(name, "key_action") == 0) {
+    // virtual set-only prop
+    return;
+  }
+  assert("Unknown property" && 0);
+}
+
 static void keyCallback(GLFWwindow* window,
                         int key,
                         int scancode,
@@ -68,6 +77,7 @@ RsgKeyboardManipulatorNode* rsgKeyboardManipulatorNodeCreate(void) {
   // base
   node->node.getTypeFunc = getType;
   node->node.processFunc = process;
+  node->node.setPropertyFunc = setProperty;
 
   // other data
   node->lastKey = GLFW_KEY_UNKNOWN;

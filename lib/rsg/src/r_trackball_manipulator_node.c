@@ -50,11 +50,12 @@ static void process(RsgNode* node,
    * Set the position prop if the coords were changed
    */
   vec2s currentPosition = (vec2s){(float)x, (float)y};
-  printf(
-      "Trackball process: currentPosition: %f, %f, cnode->currentPosition: %f, "
-      "%f\n",
-      currentPosition.raw[0], currentPosition.raw[1],
-      cnode->currentPosition.raw[0], cnode->currentPosition.raw[1]);
+  //  printf(
+  //      "Trackball process: currentPosition: %f, %f, cnode->currentPosition:
+  //      %f, "
+  //      "%f\n",
+  //      currentPosition.raw[0], currentPosition.raw[1],
+  //      cnode->currentPosition.raw[0], cnode->currentPosition.raw[1]);
   if (currentPosition.raw[0] != cnode->currentPosition.raw[0] ||
       currentPosition.raw[1] != cnode->currentPosition.raw[1]) {
     vec2s oldPosition = cnode->currentPosition;
@@ -79,15 +80,11 @@ static RsgValue getProperty(RsgNode* node, const char* name) {
 static void setProperty(RsgNode* node, const char* name, RsgValue val) {
   RsgTrackballManipulatorNode* cnode = (RsgTrackballManipulatorNode*)node;
   if (strcmp(name, "xy") == 0) {
-    printf("Trackball: xy prop set: %f, %f\n", val.asVec2.raw[0],
-           val.asVec2.raw[1]);
     cnode->currentPosition = val.asVec2;
     return;
   }
   if (strcmp(name, "xy_delta") == 0) {
-    printf("Trackball: xy_delta (virtual) prop set: %f, %f\n",
-           val.asVec2.raw[0], val.asVec2.raw[1]);
-    //    cnode->deltaPosition = val.asVec2;
+    // virtual set-only prop
     return;
   }
   assert("Unknown property" && 0);
@@ -115,13 +112,9 @@ RsgTrackballManipulatorNode* rsgTrackballManipulatorNodeCreate(void) {
   node->node.setPropertyFunc = setProperty;
 
   // other data
-  //  callbackNode = node;
   double xpos, ypos;
   glfwGetCursorPos(rsgGlobalContextGet()->window, &xpos, &ypos);
-  // FIXME: either this or the camera is buggy
   node->currentPosition = (vec2s){(float)xpos, (float)ypos};
-  //  node->currentPosition = (vec2s){0.0f, 0.0f};
-  //  node->deltaPosition = (vec2s){0.0f, 0.0f};
 
   // set mouse position callback
   //  glfwSetCursorPosCallback(rsgGlobalContextGet()->window,

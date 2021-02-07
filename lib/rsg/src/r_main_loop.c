@@ -32,6 +32,7 @@ void rsgMainLoop(RsgNode* rootNode, int traverseFreq) {
 
   if (traverseFreq <= 0) {
     // event-driven retained mode
+    printf("RSG: main loop in retained mode\n");
     /*
      * Process the node (presumably, a group or otherwise root node) using the
      * global context and the volatile local context frequenly changing from
@@ -55,6 +56,8 @@ void rsgMainLoop(RsgNode* rootNode, int traverseFreq) {
     }
   } else {
     // immediate mode
+    printf("RSG: main loop in immediate mode (%d traversals per sec)\n",
+           traverseFreq);
     useconds_t period = (int)(1 / traverseFreq) * 1000000;
     while (glfwWindowShouldClose(gctx->window) == 0) {
       glfwPollEvents();
