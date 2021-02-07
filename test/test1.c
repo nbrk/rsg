@@ -53,14 +53,16 @@ static void func(void* cookie) {
 }
 
 int main(int argc, char** argv) {
-  rsgInit(1024, 768, 0);
+  rsgInit(1024, 768, RSG_INIT_FLAG_FULLSCREEN | RSG_INIT_FLAG_HIDECURSOR);
+  //  rsgInit(1024, 768, 0);
 
   RsgCallbackNode* cbn1 = rsgCallbackNodeCreate(func, NULL);
   RsgGroupNode* gn1 = rsgGroupNodeCreate();
   RsgMeshNode* mn1 = rsgMeshNodeCreateTriangle();
   RsgShaderProgramNode* spn1 = rsgShaderProgramNodeCreate(vertex_0, fragment_0);
-  RsgCameraNode* camn1 = rsgCameraNodeCreatePerspectiveDefault(
-      rsgGetScreenWidth() / rsgGetScreenHeight());
+  //  RsgCameraNode* camn1 = rsgCameraNodeCreatePerspectiveDefault(
+  //      rsgGetScreenWidth() / rsgGetScreenHeight());
+  RsgCameraNode* camn1 = rsgCameraNodeCreatePerspectiveDefault(4.f / 3.f);
   RsgTrackballManipulatorNode* tbmn1 = rsgTrackballManipulatorNodeCreate();
   RsgKeyboardManipulatorNode* kbmn1 = rsgKeyboardManipulatorNodeCreate();
 
@@ -74,8 +76,6 @@ int main(int argc, char** argv) {
                          "trackball_xy_delta_yaw_pitch");
   rsgNodeConnectProperty((RsgNode*)kbmn1, "key_action", (RsgNode*)camn1,
                          "keyboard_wasd_action");
-  //  rsgNodeConnectProperty((RsgNode*)kbmn1, "released_key", (RsgNode*)camn1,
-  //                         "keyboard_wasd_releases");
 
   rsgGroupNodeAddChild(gn1, (RsgNode*)cbn1);
   rsgGroupNodeAddChild(gn1, (RsgNode*)tbmn1);
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
   rsgGroupNodeAddChild(gn1, (RsgNode*)mn1);
 
   //  rsgMainLoop((RsgNode*)gn1, 60); // autotraverse
-  rsgMainLoop((RsgNode*)gn1, 0);
+  rsgMainLoop((RsgNode*)gn1, 60);
 
   return 0;
 }

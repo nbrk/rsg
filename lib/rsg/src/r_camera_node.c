@@ -37,11 +37,6 @@ struct RsgCameraNode {
   float nearPlane;
   float farPlane;
 
-  // position displacement vector components cache
-  //  float forward;
-  //  float strafe;
-  //  float jump;
-
   // matrix cache
   mat4s viewMatrix;
   mat4s projectionMatrix;
@@ -51,25 +46,26 @@ static void recalcMatrices(RsgCameraNode* node) {
   // view matrix: needs direction, right and up vectors
   vec3s direction = (vec3s){cos(node->pitch) * sin(node->yaw), sin(node->pitch),
                             cos(node->pitch) * cos(node->yaw)};
-  vec3s right = (vec3s){sin(node->yaw - M_PI_2), 0, cos(node->pitch - M_PI_2)};
+  vec3s right = (vec3s){sin(node->yaw - M_PI_2), 0, cos(node->yaw - M_PI_2)};
   vec3s up = glms_cross(right, direction);
   node->viewMatrix =
       glms_lookat(node->position, glms_vec3_add(node->position, direction), up);
 
   // projection matrix
   if (node->projection == PROJECTION_PERSP)
-    node->projectionMatrix = glms_perspective_default(node->aspect);
+    node->projectionMatrix = glms_perspective(glm_rad(node->fov), node->aspect,
+                                              node->nearPlane, node->farPlane);
   if (node->projection == PROJECTION_ORTHO)
     node->projectionMatrix = glms_ortho_default(node->aspect);
 }
 
-static void positionMoveBy(RsgCameraNode* node,
-                           float forward,
-                           float strafe,
-                           float jump) {
+static vec3s positionMoveBy(const RsgCameraNode* node,
+                            float forward,
+                            float strafe,
+                            float jump) {
   vec3s direction = (vec3s){cos(node->pitch) * sin(node->yaw), sin(node->pitch),
                             cos(node->pitch) * cos(node->yaw)};
-  vec3s right = (vec3s){sin(node->yaw - M_PI_2), 0, cos(node->pitch - M_PI_2)};
+  vec3s right = (vec3s){sin(node->yaw - M_PI_2), 0, cos(node->yaw - M_PI_2)};
   vec3s up = glms_cross(right, direction);
 
   direction = glms_vec3_scale(direction, forward);
@@ -81,7 +77,7 @@ static void positionMoveBy(RsgCameraNode* node,
   newposition = glms_vec3_add(newposition, right);
   newposition = glms_vec3_add(newposition, up);
 
-  node->position = newposition;
+  return newposition;
 }
 
 static const char* getType(void) {
@@ -92,15 +88,6 @@ static void process(RsgNode* node,
                     RsgLocalContext* lctx,
                     RsgGlobalContext* gctx) {
   RsgCameraNode* cnode = (RsgCameraNode*)node;
-
-  //  // tweak the position if we have a displacement vector components set
-  //  if ((cnode->forward == cnode->strafe == cnode->jump == 0.0f) == false)
-  //    positionMoveBy(cnode, cnode->forward, cnode->strafe, cnode->jump);
-
-  /*
-   * Recalc view & projection matrices in any case (uses yaw, pitch, position).
-   */
-  recalcMatrices(cnode);
 
   /*
    * Set the well-known uniform matrices in the context. Use cached values.
@@ -141,11 +128,13 @@ static void setProperty(RsgNode* node, const char* name, RsgValue val) {
     return;
   }
   if (strcmp(name, "yaw") == 0) {
+    printf("Camera yaw property: %f\n", val.asFloat);
     cnode->yaw = val.asFloat;
     recalcMatrices(cnode);
     return;
   }
   if (strcmp(name, "pitch") == 0) {
+    printf("Camera pitch property: %f\n", val.asFloat);
     cnode->pitch = val.asFloat;
     recalcMatrices(cnode);
     return;
@@ -153,23 +142,30 @@ static void setProperty(RsgNode* node, const char* name, RsgValue val) {
 
   // set-only property
   if (strcmp(name, "yaw_delta") == 0) {
-    rsgNodeSetProperty(node, "yaw", rsgValueFloat(cnode->yaw + val.asFloat));
+    rsgNodeSetProperty(node, "yaw", rsgValueFloat(cnode->yaw - val.asFloat));
     return;
   }
 
   // set-only property
   if (strcmp(name, "pitch_delta") == 0) {
     rsgNodeSetProperty(node, "pitch",
-                       rsgValueFloat(cnode->pitch + val.asFloat));
+                       rsgValueFloat(cnode->pitch - val.asFloat));
     return;
   }
 
   // convenience set-only property to couple the angles with our trackball node
   if (strcmp(name, "trackball_xy_delta_yaw_pitch") == 0) {
-    float yawDelta = -0.001f * val.asVec2.raw[0];
-    float pitchDelta = -0.001f * val.asVec2.raw[1];
-    rsgNodeSetProperty(node, "yaw_delta", rsgValueFloat(yawDelta));
-    rsgNodeSetProperty(node, "pitch_delta", rsgValueFloat(pitchDelta));
+    float dx = val.asVec2.raw[0];
+    float dy = val.asVec2.raw[1];
+
+    if (dx != 0) {
+      float yawDelta = 0.001f * dx;
+      rsgNodeSetProperty(node, "yaw_delta", rsgValueFloat(yawDelta));
+    }
+    if (dy != 0) {
+      float pitchDelta = 0.001f * dy;
+      rsgNodeSetProperty(node, "pitch_delta", rsgValueFloat(pitchDelta));
+    }
     return;
   }
 
@@ -199,8 +195,10 @@ static void setProperty(RsgNode* node, const char* name, RsgValue val) {
     }
 
     // only recalc position vector (do some matrix math) if it will be different
-    if (forward != 0.0f || strafe != 0.0f)
-      positionMoveBy(cnode, forward, strafe, 0.0f);
+    if (forward != 0.0f || strafe != 0.0f) {
+      vec3s newPosition = positionMoveBy(cnode, forward, strafe, 0.0f);
+      rsgNodeSetProperty(node, "position", rsgValueVec3(newPosition));
+    }
 
     return;
   }

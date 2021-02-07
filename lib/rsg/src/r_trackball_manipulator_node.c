@@ -25,12 +25,12 @@
 #include <string.h>
 
 // NOTE: glfw3 callbacks do no provide cookie args, so use global node pointer
-static RsgTrackballManipulatorNode* callbackNode = NULL;
+// static RsgTrackballManipulatorNode* callbackNode = NULL;
 
 struct RsgTrackballManipulatorNode {
   RsgNode node;
   vec2s currentPosition;
-  vec2s deltaPosition;
+  //  vec2s deltaPosition;
   bool hasCurrentPosition;
 };
 
@@ -43,22 +43,29 @@ static void process(RsgNode* node,
                     RsgGlobalContext* gctx) {
   RsgTrackballManipulatorNode* cnode = (RsgTrackballManipulatorNode*)node;
 
-  //  double x, y;
-  //  glfwGetCursorPos(gctx->window, &x, &y);
-  //  vec2s currentPosition = (vec2s){(float)x, (float)y};
-  //  vec2s deltaPosition = (vec2s){0.0f, 0.0f};
-  //  if (cnode->hasCurrentPosition == true) {
-  //    // if we have previous sample, calculate the delta
-  //    deltaPosition = glms_vec2_sub(currentPosition, cnode->currentPosition);
-  //  }
+  double x, y;
+  glfwGetCursorPos(gctx->window, &x, &y);
 
-  //  /*
-  //   * Use the 'properties' machinery to update our values, possibly
-  //   triggering
-  //   * updates in other nodes' properties.
-  //   */
-  rsgNodeSetProperty(node, "xy", rsgValueVec2(cnode->currentPosition));
-  rsgNodeSetProperty(node, "xy_delta", rsgValueVec2(cnode->deltaPosition));
+  /*
+   * Set the position prop if the coords were changed
+   */
+  vec2s currentPosition = (vec2s){(float)x, (float)y};
+  printf(
+      "Trackball process: currentPosition: %f, %f, cnode->currentPosition: %f, "
+      "%f\n",
+      currentPosition.raw[0], currentPosition.raw[1],
+      cnode->currentPosition.raw[0], cnode->currentPosition.raw[1]);
+  if (currentPosition.raw[0] != cnode->currentPosition.raw[0] ||
+      currentPosition.raw[1] != cnode->currentPosition.raw[1]) {
+    vec2s oldPosition = cnode->currentPosition;
+    rsgNodeSetProperty(node, "xy", rsgValueVec2(currentPosition));
+
+    /*
+     * Set the delta pos if the position was changed
+     */
+    vec2s deltaPosition = glms_vec2_sub(cnode->currentPosition, oldPosition);
+    rsgNodeSetProperty(node, "xy_delta", rsgValueVec2(deltaPosition));
+  }
 }
 
 static RsgValue getProperty(RsgNode* node, const char* name) {
@@ -66,35 +73,36 @@ static RsgValue getProperty(RsgNode* node, const char* name) {
   if (strcmp(name, "xy") == 0) {
     return rsgValueVec2(cnode->currentPosition);
   }
-  if (strcmp(name, "xy_delta") == 0) {
-    return rsgValueVec2(cnode->deltaPosition);
-  }
   assert("Unknown property" && 0);
 }
 
 static void setProperty(RsgNode* node, const char* name, RsgValue val) {
   RsgTrackballManipulatorNode* cnode = (RsgTrackballManipulatorNode*)node;
   if (strcmp(name, "xy") == 0) {
+    printf("Trackball: xy prop set: %f, %f\n", val.asVec2.raw[0],
+           val.asVec2.raw[1]);
     cnode->currentPosition = val.asVec2;
     return;
   }
   if (strcmp(name, "xy_delta") == 0) {
-    cnode->deltaPosition = val.asVec2;
+    printf("Trackball: xy_delta (virtual) prop set: %f, %f\n",
+           val.asVec2.raw[0], val.asVec2.raw[1]);
+    //    cnode->deltaPosition = val.asVec2;
     return;
   }
   assert("Unknown property" && 0);
 }
 
-static void cursorPositionCallback(GLFWwindow* window,
-                                   double xpos,
-                                   double ypos) {
-  vec2s currentPosition = (vec2s){(float)xpos, (float)ypos};
-  vec2s deltaPosition =
-      glms_vec2_sub(currentPosition, callbackNode->currentPosition);
+// static void cursorPositionCallback(GLFWwindow* window,
+//                                   double xpos,
+//                                   double ypos) {
+//  vec2s currentPosition = (vec2s){(float)xpos, (float)ypos};
+//  vec2s deltaPosition =
+//      glms_vec2_sub(currentPosition, callbackNode->currentPosition);
 
-  callbackNode->currentPosition = currentPosition;
-  callbackNode->deltaPosition = deltaPosition;
-}
+//  callbackNode->currentPosition = currentPosition;
+//  callbackNode->deltaPosition = deltaPosition;
+//}
 
 RsgTrackballManipulatorNode* rsgTrackballManipulatorNodeCreate(void) {
   RsgTrackballManipulatorNode* node = rsgMalloc(sizeof(*node));
@@ -107,16 +115,17 @@ RsgTrackballManipulatorNode* rsgTrackballManipulatorNodeCreate(void) {
   node->node.setPropertyFunc = setProperty;
 
   // other data
-  callbackNode = node;
+  //  callbackNode = node;
   double xpos, ypos;
   glfwGetCursorPos(rsgGlobalContextGet()->window, &xpos, &ypos);
   // FIXME: either this or the camera is buggy
   node->currentPosition = (vec2s){(float)xpos, (float)ypos};
-  node->deltaPosition = (vec2s){0.0f, 0.0f};
+  //  node->currentPosition = (vec2s){0.0f, 0.0f};
+  //  node->deltaPosition = (vec2s){0.0f, 0.0f};
 
   // set mouse position callback
-  glfwSetCursorPosCallback(rsgGlobalContextGet()->window,
-                           cursorPositionCallback);
+  //  glfwSetCursorPosCallback(rsgGlobalContextGet()->window,
+  //                           cursorPositionCallback);
 
   return node;
 }

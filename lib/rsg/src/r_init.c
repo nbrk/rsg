@@ -43,7 +43,7 @@ void rsgInit(int width, int height, int flags) {
   glfwSetCursorPos(window, (double)realWidth / 2.0, (double)realHeight / 2.0);
 
   if ((flags & RSG_INIT_FLAG_HIDECURSOR) != 0)
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
   glewExperimental = GL_TRUE;
   glewInit();
