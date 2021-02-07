@@ -160,6 +160,7 @@ extern int rsgGetScreenHeight(void);
 /*
  * Value construction/adaptation/conversion helpers
  */
+extern char* rsgValueToString(RsgValue val);
 extern RsgValue rsgValueInt(int val);
 extern RsgValue rsgValueFloat(float val);
 extern RsgValue rsgValueVec2(vec2s val);

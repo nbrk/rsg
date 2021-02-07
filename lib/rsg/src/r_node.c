@@ -54,6 +54,10 @@ RsgValue rsgNodeGetProperty(RsgNode* node, const char* name) {
 }
 
 void rsgNodeSetProperty(RsgNode* node, const char* name, RsgValue val) {
+  char* valStr = rsgValueToString(val);
+  printf("PROPERTY '%s' in %s: SET %s\n", name, node->getTypeFunc(), valStr);
+  rsgFree(valStr);
+
   // set our property, if the set function is provided
   if (node->setPropertyFunc != NULL)
     node->setPropertyFunc(node, name, val);

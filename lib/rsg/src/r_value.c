@@ -21,6 +21,28 @@
  */
 #include "rsg_internal.h"
 
+char* rsgValueToString(RsgValue val) {
+  static const size_t bufferSize = 64;
+  char* buffer = rsgMalloc(bufferSize);
+  snprintf(buffer, bufferSize, "unknown: <...>");
+  if (val.type == RSG_VALUE_INT)
+    snprintf(buffer, bufferSize, "int: %d", val.asInt);
+  if (val.type == RSG_VALUE_FLOAT)
+    snprintf(buffer, bufferSize, "float: %f", val.asFloat);
+  if (val.type == RSG_VALUE_VEC2)
+    snprintf(buffer, bufferSize, "vec2: %f, %f", val.asVec2.raw[0],
+             val.asVec2.raw[1]);
+  if (val.type == RSG_VALUE_VEC3)
+    snprintf(buffer, bufferSize, "vec3: %f, %f, %f", val.asVec3.raw[0],
+             val.asVec3.raw[1], val.asVec3.raw[2]);
+  if (val.type == RSG_VALUE_VEC4)
+    snprintf(buffer, bufferSize, "vec4: %f, %f, %f, %f", val.asVec4.raw[0],
+             val.asVec4.raw[1], val.asVec4.raw[2], val.asVec4.raw[3]);
+  if (val.type == RSG_VALUE_MAT4)
+    snprintf(buffer, bufferSize, "mat4: <...>");
+  return buffer;
+}
+
 RsgValue rsgValueInt(int val) {
   return (RsgValue){.type = RSG_VALUE_INT, .asInt = val};
 }
