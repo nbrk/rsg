@@ -104,8 +104,10 @@ extern int rsgGetScreenHeight(void);
  */
 extern RsgValue rsgNodeGetProperty(RsgNode* node, const char* name);
 extern void rsgNodeSetProperty(RsgNode* node, const char* name, RsgValue value);
-extern void rsgNodeBindProperty(RsgNode* node, const char* name,
-                                RsgNode* toNode, const char* toName);
+extern void rsgNodeBindProperty(RsgNode* node,
+                                const char* name,
+                                RsgNode* toNode,
+                                const char* toName);
 
 /*
  * Callback node
@@ -128,16 +130,23 @@ extern RsgNode* rsgScreenNodeCreate(void);
  */
 extern RsgNode* rsgCameraNodeCreatePerspectiveDefault(void);
 extern RsgNode* rsgCameraNodeCreateOrthographicDefault(void);
-extern RsgNode* rsgCameraNodeCreate(vec3s position, float horizAngle,
-                                    float vertAngle, float fov, float aspect,
-                                    float nearPlane, float farPlane,
+extern RsgNode* rsgCameraNodeCreate(vec3s position,
+                                    float horizAngle,
+                                    float vertAngle,
+                                    float fov,
+                                    float aspect,
+                                    float nearPlane,
+                                    float farPlane,
                                     bool perspective);
 
 /*
  * Shader node
  */
-extern RsgNode* rsgShaderProgramNodeCreate(const char* vertexText,
-                                           const char* fragmentText);
+extern RsgNode* rsgShaderNodeCreate(unsigned int program);
+extern RsgNode* rsgShaderNodeCreateFromMemory(const char* vertexText,
+                                              const char* fragmentText);
+extern RsgNode* rsgShaderNodeCreateFromFiles(const char* vertexPath,
+                                             const char* fragmentPath);
 
 /*
  * Mouse manipulator node
@@ -148,3 +157,8 @@ extern RsgNode* rsgMouseManipulatorNodeCreate(void);
  * Property printer/debugger node
  */
 extern RsgNode* rsgPropertyPrinterNodeCreate(void);
+
+/*
+ * Mesh draw node.
+ */
+extern RsgNode* rsgMeshNodeCreateTriangle(void);

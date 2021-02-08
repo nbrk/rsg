@@ -13,10 +13,12 @@ set(SRCS
   src/r_context.c
   src/r_value.c
   src/r_value_gvalue.c
+  src/r_shader_loader.c
   src/r_main_loop.c
   src/r_abstract_node.c
   src/r_callback_node.c
   src/r_group_node.c
+  src/r_mesh_node.c
   src/r_screen_node.c # XXX
   src/r_mouse_manipulator_node.c
   src/r_camera_node.c

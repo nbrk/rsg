@@ -33,8 +33,8 @@ static const char* vertex_0 =
     "void main()\n"
     "{\n"
     "//gl_Position = u_projection * u_view * u_model * vec4(a_position, 1.0);\n"
-    "gl_Position = u_projection * u_view * vec4(a_position, 1.0);\n"
-    "//gl_Position = vec4(a_position, 1.0);\n"
+    "//gl_Position = u_projection * u_view * vec4(a_position, 1.0);\n"
+    "gl_Position = vec4(a_position, 1.0);\n"
     "}\n"
     "\n";
 static const char* fragment_0 =
@@ -42,8 +42,8 @@ static const char* fragment_0 =
     "uniform vec4 u_diffuse_color;\n"
     "void main()\n"
     "{\n"
-    "gl_FragColor = u_diffuse_color;\n"
-    "//gl_FragColor = vec4(0.3, 0.0, 0.0, 1.0);\n"
+    "//gl_FragColor = u_diffuse_color;\n"
+    "gl_FragColor = vec4(0.3, 0.0, 0.0, 1.0);\n"
     "}\n"
     "\n";
 
@@ -53,67 +53,38 @@ static void func(void* cookie) {
 }
 
 static void printIntCookie(void* cookie) {
-  if (cookie != NULL) printf("Int cookie is %d\n", (int)cookie);
+  if (cookie != NULL)
+    printf("Int cookie is %d\n", (int)cookie);
 }
 
 int main(int argc, char** argv) {
   //  rsgInit(1024, 768, RSG_INIT_FLAG_FULLSCREEN | RSG_INIT_FLAG_HIDECURSOR);
   rsgInit(1024, 768, 0);
 
-  //  RsgCallbackNode* cbn1 = rsgCallbackNodeCreate(func, NULL);
-  //  RsgGroupNode* gn1 = rsgGroupNodeCreate();
-  //  RsgMeshNode* mn1 = rsgMeshNodeCreateTriangle();
-  //  RsgShaderProgramNode* spn1 = rsgShaderProgramNodeCreate(vertex_0,
-  //  fragment_0);
-  //  //  RsgCameraNode* camn1 = rsgCameraNodeCreatePerspectiveDefault(
-  //  //      rsgGetScreenWidth() / rsgGetScreenHeight());
-  //  RsgCameraNode* camn1 = rsgCameraNodeCreatePerspectiveDefault(4.f / 3.f);
-  //  RsgTrackballManipulatorNode* tbmn1 = rsgTrackballManipulatorNodeCreate();
-  //  RsgKeyboardManipulatorNode* kbmn1 = rsgKeyboardManipulatorNodeCreate();
-
-  //  const char* names[] = {"u_int", "u_float", "u_diffuse_color"};
-  //  RsgValue values[] = {
-  //      rsgValueInt(100), rsgValueFloat(12.3f),
-  //      rsgValueVec4((vec4s){.x = 0.f, .y = 1.0f, .z = 0.0f, .w = 1.f})};
-  //  RsgUniformSetterNode* usn1 = rsgUniformSetterNodeCreate(names, values, 3);
-
-  //  rsgNodeConnectProperty((RsgNode*)tbmn1, "xy_delta", (RsgNode*)camn1,
-  //                         "trackball_xy_delta_yaw_pitch");
-  //  rsgNodeConnectProperty((RsgNode*)kbmn1, "key_action", (RsgNode*)camn1,
-  //                         "keyboard_wasd_action");
-
-  //  rsgGroupNodeAddChild(gn1, (RsgNode*)cbn1);
-  //  rsgGroupNodeAddChild(gn1, (RsgNode*)tbmn1);
-  //  rsgGroupNodeAddChild(gn1, (RsgNode*)kbmn1);
-  //  rsgGroupNodeAddChild(gn1, (RsgNode*)camn1);
-  //  rsgGroupNodeAddChild(gn1, (RsgNode*)usn1);
-  //  rsgGroupNodeAddChild(gn1, (RsgNode*)spn1);
-  //  rsgGroupNodeAddChild(gn1, (RsgNode*)mn1);
-
-  //    rsgMainLoop((RsgNode*)gn1, 0);  // retained
-  //    rsgMainLoop((RsgNode*)gn1, 60);  // immediate
-
-  //  RsgNode* callback1 = rsgCallbackNodeCreate(printIntCookie, NULL);
-  //  RsgNode* callback2 = rsgCallbackNodeCreate(NULL, NULL);
   RsgNode* group1 = rsgGroupNodeCreate();
-  RsgNode* screen1 = rsgScreenNodeCreate();
+  //  RsgNode* screen1 = rsgScreenNodeCreate();
   RsgNode* mouse1 = rsgMouseManipulatorNodeCreate();
   RsgNode* printer1 = rsgPropertyPrinterNodeCreate();
+  RsgNode* mesh1 = rsgMeshNodeCreateTriangle();
+  RsgNode* shader1 = rsgShaderNodeCreateFromMemory(vertex_0, fragment_0);
 
-  rsgNodeBindProperty(mouse1, "x", printer1, "int1");
-  rsgNodeBindProperty(mouse1, "y", printer1, "int2");
-  rsgNodeBindProperty(mouse1, "xChange", printer1, "int3");
-  rsgNodeBindProperty(mouse1, "yChange", printer1, "int4");
+  //  rsgNodeBindProperty(mouse1, "x", printer1, "int1");
+  //  rsgNodeBindProperty(mouse1, "y", printer1, "int2");
+  //  rsgNodeBindProperty(mouse1, "xChange", printer1, "int3");
+  //  rsgNodeBindProperty(mouse1, "yChange", printer1, "int4");
 
   //  rsgNodeSetProperty(callback1, "callback", rsgValuePointer(func));
   //  rsgNodeSetProperty(screen1, "clearColor",
   //                     rsgValueVec4((vec4s){{1.0f, 1.f, 0.0f, 1.0f}}));
-  rsgNodeBindProperty(mouse1, "x", screen1, "clearRed");
-  rsgNodeBindProperty(mouse1, "y", screen1, "clearGreen");
+  //  rsgNodeBindProperty(mouse1, "x", screen1, "clearRed");
+  //  rsgNodeBindProperty(mouse1, "y", screen1, "clearGreen");
+  //  rsgNodeBindProperty(mouse1, "y", screen1, "clearBlue");
 
-  rsgGroupNodeAddChild(group1, screen1);
+  //  rsgGroupNodeAddChild(group1, screen1);
   rsgGroupNodeAddChild(group1, mouse1);
   rsgGroupNodeAddChild(group1, printer1);
+  rsgGroupNodeAddChild(group1, shader1);
+  rsgGroupNodeAddChild(group1, mesh1);
   //  rsgGroupNodeAddChild(group1, callback1);
   //  rsgGroupNodeAddChild(group1, callback2);
 

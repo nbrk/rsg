@@ -35,6 +35,7 @@
  * DATA.
  */
 typedef struct {
+  GLuint program;
 } RsgLocalContext;
 
 typedef struct {
@@ -47,7 +48,10 @@ typedef struct {
   RsgLocalContext* local;
 } RsgContext;
 
-G_DECLARE_DERIVABLE_TYPE(RsgAbstractNode, rsg_abstract_node, RSG, ABSTRACT_NODE,
+G_DECLARE_DERIVABLE_TYPE(RsgAbstractNode,
+                         rsg_abstract_node,
+                         RSG,
+                         ABSTRACT_NODE,
                          GObject)
 #define RSG_TYPE_ABSTRACT_NODE rsg_abstract_node_get_type()
 struct _RsgAbstractNodeClass {
@@ -67,7 +71,9 @@ struct _RsgAbstractNodeClass {
 /*******************************************************************************
  * FUNCTIONS.
  */
-extern void* rsgCallocDbg(size_t number, size_t size, const char* file,
+extern void* rsgCallocDbg(size_t number,
+                          size_t size,
+                          const char* file,
                           int line);
 extern void* rsgMallocDbg(size_t size, const char* file, int line);
 extern void* rsgReallocDbg(void* mem, size_t size, const char* file, int line);
@@ -85,11 +91,8 @@ extern GType vec2s_get_type(void);
 extern GType vec3s_get_type(void);
 extern GType vec4s_get_type(void);
 extern GType mat4s_get_type(void);
-// extern void vec2s_free(vec2s* data);
-// extern void vec3s_free(vec3s* data);
-// extern void vec4s_free(vec4s* data);
-// extern void mat4s_free(mat4s* data);
-// extern vec2s* vec2s_copy(const vec2s* data);
-// extern vec3s* vec3s_copy(const vec3s* data);
-// extern vec4s* vec4s_copy(const vec4s* data);
-// extern mat4s* mat4s_copy(const mat4s* data);
+
+GLuint rsgShaderProgramAssembleFromStrings(const char* vertexString,
+                                           const char* fragmentString);
+GLuint rsgShaderProgramAssembleFromFiles(const char* vertexPath,
+                                         const char* fragmentPath);

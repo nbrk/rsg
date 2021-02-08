@@ -22,7 +22,10 @@
 
 #include "rsg_internal.h"
 
-G_DECLARE_FINAL_TYPE(RsgScreenNode, rsg_screen_node, RSG, SCREEN_NODE,
+G_DECLARE_FINAL_TYPE(RsgScreenNode,
+                     rsg_screen_node,
+                     RSG,
+                     SCREEN_NODE,
                      RsgAbstractNode)
 
 struct _RsgScreenNode {
@@ -50,8 +53,10 @@ static void process(RsgAbstractNode* node, RsgContext* ctx) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-static void set_property(GObject* object, guint property_id,
-                         const GValue* value, GParamSpec* pspec) {
+static void set_property(GObject* object,
+                         guint property_id,
+                         const GValue* value,
+                         GParamSpec* pspec) {
   RsgScreenNode* cnode = RSG_SCREEN_NODE(object);
 
   switch (property_id) {
@@ -77,7 +82,9 @@ static void set_property(GObject* object, guint property_id,
   }
 }
 
-static void get_property(GObject* object, guint property_id, GValue* value,
+static void get_property(GObject* object,
+                         guint property_id,
+                         GValue* value,
                          GParamSpec* pspec) {
   RsgScreenNode* cnode = RSG_SCREEN_NODE(object);
 
@@ -109,7 +116,7 @@ static void rsg_screen_node_class_init(RsgScreenNodeClass* klass) {
       g_param_spec_int("clearGreen", "Clear Green", "Green clear component", 0,
                        G_MAXINT, 0, G_PARAM_WRITABLE);
   properties[PROP_CLEAR_BLUE] =
-      g_param_spec_int("clearNlue", "Clear Green", "Blue clear component", 0,
+      g_param_spec_int("clearBlue", "Clear Green", "Blue clear component", 0,
                        G_MAXINT, 0, G_PARAM_WRITABLE);
 
   g_object_class_install_properties(G_OBJECT_CLASS(klass), N_PROPERTIES,
