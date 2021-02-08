@@ -19,61 +19,55 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include "rsg_internal.h"
-
 #include <stdio.h>
 #include <unistd.h>
 
-void rsgMainLoop(RsgNode* rootNode, int traverseFreq) {
-  assert(rsgGlobalContextGet() != NULL);
+#include "rsg_internal.h"
 
-  RsgLocalContext* lctx = rsgMalloc(sizeof(*lctx));
-  RsgGlobalContext* gctx = rsgGlobalContextGet();
+void rsgMainLoop(RsgNode* root, int traversalFreq) {
+  assert(rsgGetGlobalContext() != NULL);
+  assert(root != NULL);
+  void (*checkEventsFunc)(void) = NULL;
+  int (*usecSleepFunc)(useconds_t usec) = NULL;
+  useconds_t usecSleepPeriod = 0;
+  RsgAbstractNode* abstractRoot = RSG_ABSTRACT_NODE(root);
+  /*
+   * Set up the context
+   */
+  RsgContext* ctx = rsgMalloc(sizeof(*ctx));
+  ctx->global = rsgGetGlobalContext();
+  ctx->local = rsgMalloc(sizeof(*ctx->local));
 
-  if (traverseFreq <= 0) {
+  if (traversalFreq <= 0) {
     // event-driven retained mode
     printf("RSG: main loop in retained mode\n");
-    /*
-     * Process the node (presumably, a group or otherwise root node) using the
-     * global context and the volatile local context frequenly changing from
-     * node to node in a subtree.
-     */
-    while (glfwWindowShouldClose(gctx->window) == 0) {
-      glfwWaitEvents();
-
-      // NOTE: start every traversal with a clean/default local context
-      rsgLocalContextSetDefaults(lctx);
-
-      glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-      // process given 'root' (probably recursive, if it is a group node or
-      // such)
-      rootNode->processFunc(rootNode, lctx, gctx);
-      gctx->totalTraversals++;
-
-      glfwSwapBuffers(gctx->window);
-    }
+    checkEventsFunc = glfwWaitEvents;
+    usecSleepFunc = NULL;
   } else {
-    // immediate mode
+    // continunous update mode
     printf("RSG: main loop in immediate mode (%d traversals per sec)\n",
-           traverseFreq);
-    useconds_t period = (int)(1 / traverseFreq) * 1000000;
-    while (glfwWindowShouldClose(gctx->window) == 0) {
-      glfwPollEvents();
-
-      rsgLocalContextSetDefaults(lctx);
-
-      glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-      rootNode->processFunc(rootNode, lctx, gctx);
-      gctx->totalTraversals++;
-
-      glfwSwapBuffers(gctx->window);
-      usleep(period);
-    }
+           traversalFreq);
+    checkEventsFunc = glfwPollEvents;
+    usecSleepFunc = usleep;
+    usecSleepPeriod = (int)((1.0f / traversalFreq) * 1000000);
   }
 
-  printf("RSG: main loop done after %zu traversals\n", gctx->totalTraversals);
+  while (glfwWindowShouldClose(ctx->global->window) == 0) {
+    checkEventsFunc();
+
+    // re-set the local context with default values before each traversal
+    rsgLocalContextReset(ctx->local);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    RSG_ABSTRACT_NODE_GET_CLASS(abstractRoot)->processFunc(abstractRoot, ctx);
+    ctx->global->totalTraversals++;
+
+    glfwSwapBuffers(ctx->global->window);
+    if (usecSleepFunc != NULL) usleep(usecSleepPeriod);
+  }
+
+  printf("RSG: main loop done after %zu traversals\n",
+         ctx->global->totalTraversals);
 }

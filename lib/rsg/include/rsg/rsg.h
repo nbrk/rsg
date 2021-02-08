@@ -30,11 +30,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#define rsgMalloc(x) rsgMallocDbg(x, __FILE__, __LINE__)
-#define rsgCalloc(x, y) rsgCallocDbg(x, y, __FILE__, __LINE__)
-#define rsgRealloc(x, y) rsgReallocDbg(x, y, __FILE__, __LINE__)
-#define rsgFree(x) rsgFreeDbg(x, __FILE__, __LINE__)
-
 #define RSG_INIT_FLAG_FULLSCREEN 1
 #define RSG_INIT_FLAG_HIDECURSOR 2
 
@@ -42,10 +37,11 @@
  * DATA.
  */
 /**
- * @brief Possible value type
+ * @brief Supported value types
  */
 typedef enum {
-  RSG_VALUE_INT = 1,
+  RSG_VALUE_POINTER,
+  RSG_VALUE_INT,
   RSG_VALUE_FLOAT,
   RSG_VALUE_VEC2,
   RSG_VALUE_VEC3,
@@ -54,11 +50,12 @@ typedef enum {
 } RsgValueType;
 
 /**
- * @brief Value pass in/pass out container used throughout the library
+ * @brief Value container
  */
 typedef struct {
   RsgValueType type;
   union {
+    void* asPointer;
     int asInt;
     float asFloat;
     vec2s asVec2;
@@ -69,174 +66,85 @@ typedef struct {
 } RsgValue;
 
 /**
- * @brief Function pointers used as adapters to convert Value data on the fly
- */
-typedef RsgValue (*RsgValueAdapterFunc)(RsgValue);
-
-/**
- * @brief Opaque base node handle (every node must contain this at offset zero)
+ * @brief Opaque node type
  */
 typedef struct RsgNode RsgNode;
 
-/**
- * @brief Node that runs a custom code with a cookie pointer arg, when processed
- */
-typedef struct RsgCallbackNode RsgCallbackNode;
-
-/**
- * @brief Node that groups other nodes. When processed, it preserves the local
- * context, processes the children from left to right, then restores the local
- * ctx (so no local changes are leaked back up into the tree/group's siblings).
- */
-typedef struct RsgGroupNode RsgGroupNode;
-
-/**
- * @brief Node that draws a mesh geometry using values from the local context.
- */
-typedef struct RsgMeshNode RsgMeshNode;
-
-/**
- * @brief Node that, when processed, sets a list of uniforms in the local ctx
- */
-typedef struct RsgUniformSetterNode RsgUniformSetterNode;
-
-/**
- * @brief Node that sets a shader program in the local context
- */
-typedef struct RsgShaderProgramNode RsgShaderProgramNode;
-
-/**
- * @brief Convenience node that sets Model/View matrix uniforms in the local
- * context and exposes them via property system
- */
-typedef struct RsgCameraNode RsgCameraNode;
-
-/**
- * @brief Node that changes its "x", "y", etc. properties on mouse motions
- */
-typedef struct RsgTrackballManipulatorNode RsgTrackballManipulatorNode;
-
-/**
- * @brief Node that spews key scancodes (via props) on keyboard state changes
- */
-typedef struct RsgKeyboardManipulatorNode RsgKeyboardManipulatorNode;
-
-/**
- * @brief Node that strobes the system
- */
-typedef struct RsgClockNode RsgClockNode;
 /*******************************************************************************
  * FUNCTIONS.
  */
 /*
  * Memory helpers
  */
-extern void* rsgCallocDbg(size_t number,
-                          size_t size,
-                          const char* file,
-                          int line);
-extern void* rsgMallocDbg(size_t size, const char* file, int line);
-extern void* rsgReallocDbg(void* mem, size_t size, const char* file, int line);
-extern void rsgFreeDbg(void* mem, const char* file, int line);
 extern void rsgMallocSetDebug(bool value);
 extern void rsgMallocPrintStat(void);
 
 /*
- * Initialization, library global parameters and main loop.
- */
-extern void rsgInit(int width, int height, int flags);
-/**
- * @brief Enter the main event loop. The tree is traversed in response to the
- * backend events or automatically `traverseFreq' times per second
- * @param rootNode
- * @param traverseFreq if zero, then run in "retained mode" which only traverses
- * the tree when the GUI/inputs is changed. Otherwise, run in "immediate mode"
- * and traverse the tree `traverseFreq' times per second.
- */
-extern void rsgMainLoop(RsgNode* rootNode, int traverseFreq);
-extern int rsgGetScreenWidth(void);
-extern int rsgGetScreenHeight(void);
-
-/*
- * Value construction/adaptation/conversion helpers
+ * Value container helpers.
  */
 extern char* rsgValueToString(RsgValue val);
+extern RsgValue rsgValuePointer(void* val);
 extern RsgValue rsgValueInt(int val);
 extern RsgValue rsgValueFloat(float val);
 extern RsgValue rsgValueVec2(vec2s val);
 extern RsgValue rsgValueVec3(vec3s val);
 extern RsgValue rsgValueVec4(vec4s val);
 extern RsgValue rsgValueMat4(mat4s val);
-extern RsgValueAdapterFunc rsgValueAdapterVec2ProjectX(void);
-extern RsgValueAdapterFunc rsgValueAdapterVec2ProjectY(void);
 
 /*
- * Base node functions
+ * Initialization, library global parameters and main loop.
  */
-extern const char* rsgNodeGetType(RsgNode* node);
+extern void rsgInit(int width, int height, int flags);
+extern void rsgMainLoop(RsgNode* root, int traversalFreq);
+extern int rsgGetScreenWidth(void);
+extern int rsgGetScreenHeight(void);
+
+/*
+ * Properties of nodes
+ */
 extern RsgValue rsgNodeGetProperty(RsgNode* node, const char* name);
-extern void rsgNodeSetProperty(RsgNode* node, const char* name, RsgValue val);
-extern void rsgNodeConnectProperty(RsgNode* node,
-                                   const char* name,
-                                   RsgNode* targetNode,
-                                   const char* targetName);
-extern void rsgNodeConnectPropertyWithAdapter(RsgNode* node,
-                                              const char* name,
-                                              RsgNode* targetNode,
-                                              const char* targetName,
-                                              RsgValue (**funcs)(RsgValue),
-                                              size_t nfuncs);
+extern void rsgNodeSetProperty(RsgNode* node, const char* name, RsgValue value);
+extern void rsgNodeBindProperty(RsgNode* node, const char* name,
+                                RsgNode* toNode, const char* toName);
 
 /*
- * Callback node functions
+ * Callback node
  */
-extern RsgCallbackNode* rsgCallbackNodeCreate(void (*func)(void*),
-                                              void* cookie);
+extern RsgNode* rsgCallbackNodeCreate(void (*func)(void*), void* cookie);
 
 /*
- * Group node functions
+ * Group node
  */
-extern RsgGroupNode* rsgGroupNodeCreate(void);
-extern void rsgGroupNodeAddChild(RsgGroupNode* node, RsgNode* childNode);
+extern RsgNode* rsgGroupNodeCreate(void);
+extern void rsgGroupNodeAddChild(RsgNode* groupNode, RsgNode* childNode);
 
 /*
- * Mesh node functions
+ * Screen node
  */
-extern RsgMeshNode* rsgMeshNodeCreateTriangle(void);
+extern RsgNode* rsgScreenNodeCreate(void);
 
 /*
- * Shader Uniform setter node functions
+ * Camera node
  */
-extern RsgUniformSetterNode* rsgUniformSetterNodeCreate(const char** names,
-                                                        RsgValue* values,
-                                                        size_t numValues);
-/*
- * Shader node functions
- */
-extern RsgShaderProgramNode* rsgShaderProgramNodeCreate(
-    const char* vertexText,
-    const char* fragmentText);
+extern RsgNode* rsgCameraNodeCreatePerspectiveDefault(void);
+extern RsgNode* rsgCameraNodeCreateOrthographicDefault(void);
+extern RsgNode* rsgCameraNodeCreate(vec3s position, float horizAngle,
+                                    float vertAngle, float fov, float aspect,
+                                    float nearPlane, float farPlane,
+                                    bool perspective);
 
 /*
- * Camera node functions
+ * Shader node
  */
-extern RsgCameraNode* rsgCameraNodeCreatePerspectiveDefault(float aspect);
-extern RsgCameraNode* rsgCameraNodeCreateOrthographicDefault(float aspect);
-RsgCameraNode* rsgCameraNodeCreate(vec3s position,
-                                   float horizAngle,
-                                   float vertAngle,
-                                   float fov,
-                                   float aspect,
-                                   float nearPlane,
-                                   float farPlane,
-                                   bool perspective);
+extern RsgNode* rsgShaderProgramNodeCreate(const char* vertexText,
+                                           const char* fragmentText);
 
 /*
- * Trackball manipulator node functions
+ * Mouse manipulator node
  */
-extern RsgTrackballManipulatorNode* rsgTrackballManipulatorNodeCreate(void);
+extern RsgNode* rsgMouseManipulatorNodeCreate(void);
 
 /*
- * Keyboard manipulator node functions
+ * Property printer/debugger node
  */
-extern RsgKeyboardManipulatorNode* rsgKeyboardManipulatorNodeCreate(void);
+extern RsgNode* rsgPropertyPrinterNodeCreate(void);

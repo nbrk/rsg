@@ -19,10 +19,11 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
 #include "rsg_internal.h"
 
 void rsgInit(int width, int height, int flags) {
-  assert(rsgGlobalContextGet() == NULL);
+  assert(rsgGetGlobalContext() == NULL);
   glfwInit();
 
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
@@ -40,7 +41,8 @@ void rsgInit(int width, int height, int flags) {
   glfwMakeContextCurrent(window);
   int realWidth, realHeight;
   glfwGetWindowSize(window, &realWidth, &realHeight);
-  glfwSetCursorPos(window, (double)realWidth / 2.0, (double)realHeight / 2.0);
+  //  glfwSetCursorPos(window, (double)realWidth / 2.0, (double)realHeight
+  //  / 2.0);
 
   if ((flags & RSG_INIT_FLAG_HIDECURSOR) != 0)
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -55,5 +57,9 @@ void rsgInit(int width, int height, int flags) {
   /*
    * Create and configure the global context
    */
-  (void)rsgGlobalContextCreate(window);
+  RsgGlobalContext* gctx = rsgMalloc(sizeof(*gctx));
+  gctx->window = window;
+  gctx->totalTraversals = 0L;
+
+  rsgSetGlobalContext(gctx);
 }

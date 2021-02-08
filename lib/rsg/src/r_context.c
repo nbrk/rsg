@@ -19,27 +19,16 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
 #include "rsg_internal.h"
 
 static RsgGlobalContext* globalContext = NULL;
 
-RsgGlobalContext* rsgGlobalContextGet(void) {
-  return globalContext;
-}
+RsgGlobalContext* rsgGetGlobalContext(void) { return globalContext; }
 
-RsgGlobalContext* rsgGlobalContextCreate(GLFWwindow* window) {
-  assert(globalContext == NULL);
-
-  globalContext = rsgMalloc(sizeof(*globalContext));
-  globalContext->window = window;
-  globalContext->totalTraversals = 0;
-  return globalContext;
-}
+void rsgSetGlobalContext(RsgGlobalContext* gctx) { globalContext = gctx; }
 
 int rsgGetScreenWidth(void) {
   assert(globalContext != NULL);
-
   int width;
   int height;
   glfwGetWindowSize(globalContext->window, &width, &height);
@@ -48,9 +37,10 @@ int rsgGetScreenWidth(void) {
 
 int rsgGetScreenHeight(void) {
   assert(globalContext != NULL);
-
   int width;
   int height;
   glfwGetWindowSize(globalContext->window, &width, &height);
   return height;
 }
+
+void rsgLocalContextReset(RsgLocalContext* lctx) {}

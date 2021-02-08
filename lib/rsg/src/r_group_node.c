@@ -19,83 +19,68 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+#include <stdio.h>
 
 #include "rsg_internal.h"
 
-typedef struct RsgGroupNodeChild RsgGroupNodeChild;
-struct RsgGroupNodeChild {
-  RsgNode* node;
-  STAILQ_ENTRY(RsgGroupNodeChild) entries;
+G_DECLARE_FINAL_TYPE(RsgGroupNode, rsg_group_node, RSG, GROUP_NODE,
+                     RsgAbstractNode)
+
+struct _RsgGroupNode {
+  RsgAbstractNode abstract;
+  GList* children;
+  RsgLocalContext* lctxBackup;
 };
 
-struct RsgGroupNode {
-  RsgNode node;
-  STAILQ_HEAD(, RsgGroupNodeChild) children;
-  size_t childrenCount;
-  RsgLocalContext* lctx_backup;
-};
+G_DEFINE_TYPE(RsgGroupNode, rsg_group_node, RSG_TYPE_ABSTRACT_NODE)
 
-static const char* getType(void) {
-  return "RsgGroupNode";
-}
-
-static void process(RsgNode* node,
-                    RsgLocalContext* lctx,
-                    RsgGlobalContext* gctx) {
-  RsgGroupNode* cnode = (RsgGroupNode*)node;
-
-  // no children means empty group and no processing
-  if (cnode->childrenCount == 0)
+static void process(RsgAbstractNode* node, RsgContext* ctx) {
+  RsgGroupNode* cnode = RSG_GROUP_NODE(node);
+  if (cnode->children == NULL) {
+    // no children
     return;
+  }
+  /*
+   * Save the local context copy, process all children from left to right, and
+   * restore the local context.
+   */
+  *cnode->lctxBackup = *ctx->local;
 
-  // make a copy of the local context to be restored upon finish of children
-  // processing
-  *cnode->lctx_backup = *lctx;
-
-  // process children from left to right
-  RsgGroupNodeChild* child;
-  STAILQ_FOREACH(child, &cnode->children, entries) {
-    child->node->processFunc(child->node, lctx, gctx);
+  GList* elem = NULL;
+  for (elem = cnode->children; elem != NULL; elem = elem->next) {
+    RsgAbstractNode* childNode = RSG_ABSTRACT_NODE(elem->data);
+    RSG_ABSTRACT_NODE_GET_CLASS(childNode)->processFunc(childNode, ctx);
   }
 
-  /*
-   * Restore local/subtree context after all children are done, so the local
-   * ctx changes do not propagate back up over into the tree (e.g. to siblings
-   * of the group node)
-   */
-  // WARNING: deep clone the lctx
-  *lctx = *cnode->lctx_backup;
+  *ctx->local = *cnode->lctxBackup;
 }
 
-static void destroy(RsgNode* node) {
-  RsgGroupNode* cnode = (RsgGroupNode*)node;
-
-  rsgFree(cnode->lctx_backup);
+static void finalize(GObject* node) {
+  RsgGroupNode* cnode = RSG_GROUP_NODE(node);
+  g_list_free(cnode->children);  // NOTE: free only list elems, not the child
+                                 // nodes themselves
+  rsgFree(cnode->lctxBackup);
 }
 
-RsgGroupNode* rsgGroupNodeCreate(void) {
-  RsgGroupNode* node = rsgMalloc(sizeof(*node));
-  rsgNodeSetDefaults(&node->node);
-
-  // base
-  node->node.getTypeFunc = getType;
-  node->node.processFunc = process;
-  node->node.destroyFunc = destroy;
-
-  // other data
-  STAILQ_INIT(&node->children);
-  node->childrenCount = 0;
-  node->lctx_backup = rsgMalloc(sizeof(*node->lctx_backup));
-
-  return node;
+static void rsg_group_node_class_init(RsgGroupNodeClass* klass) {
+  RSG_ABSTRACT_NODE_CLASS(klass)->processFunc = process;
+  G_OBJECT_CLASS(klass)->finalize = finalize;
 }
 
-void rsgGroupNodeAddChild(RsgGroupNode* node, RsgNode* childNode) {
-  assert(childNode != NULL && "adding null child");
+static void rsg_group_node_init(RsgGroupNode* cnode) {
+  cnode->children = NULL;
+  cnode->lctxBackup = rsgMalloc(sizeof(*cnode->lctxBackup));
+}
 
-  RsgGroupNodeChild* child = rsgMalloc(sizeof(*child));
-  child->node = childNode;
-  STAILQ_INSERT_TAIL(&node->children, child, entries);
+RsgNode* rsgGroupNodeCreate(void) {
+  return g_object_new(rsg_group_node_get_type(), NULL);
+}
 
-  node->childrenCount++;
+void rsgGroupNodeAddChild(RsgNode* node, RsgNode* childNode) {
+  assert(RSG_IS_GROUP_NODE(node) != false);
+  assert(RSG_IS_ABSTRACT_NODE(childNode) != false);
+
+  RsgGroupNode* cnode = RSG_GROUP_NODE(node);
+
+  cnode->children = g_list_append(cnode->children, childNode);
 }

@@ -20,115 +20,76 @@
  * IN THE SOFTWARE.
  */
 #pragma once
-
-#include <rsg/rsg.h>
-
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <assert.h>
-#include <sys/queue.h>
+#include <glib-object.h>
+#include <rsg/rsg.h>
 
-#define RSG_LOCAL_CONTEXT_MAX_UNIFORMS 16
+#define rsgMalloc(x) rsgMallocDbg(x, __FILE__, __LINE__)
+#define rsgCalloc(x, y) rsgCallocDbg(x, y, __FILE__, __LINE__)
+#define rsgRealloc(x, y) rsgReallocDbg(x, y, __FILE__, __LINE__)
+#define rsgFree(x) rsgFreeDbg(x, __FILE__, __LINE__)
 
 /*******************************************************************************
  * DATA.
  */
-/**
- * @brief Library global context
- */
+typedef struct {
+} RsgLocalContext;
+
 typedef struct {
   GLFWwindow* window;
   size_t totalTraversals;
 } RsgGlobalContext;
 
-/**
- * @brief Context local to a subtree
- */
 typedef struct {
-  /*
-   * OpenGL state machine related settings used in various nodes
-   */
-  GLuint program;
-  size_t numUniforms;
+  RsgGlobalContext* global;
+  RsgLocalContext* local;
+} RsgContext;
 
-  /*
-   * Uniforms passed to shaders in drawing nodes
-   */
-  const char* uniformNames[RSG_LOCAL_CONTEXT_MAX_UNIFORMS];
-  RsgValue uniformValues[RSG_LOCAL_CONTEXT_MAX_UNIFORMS];
-} RsgLocalContext;
+G_DECLARE_DERIVABLE_TYPE(RsgAbstractNode, rsg_abstract_node, RSG, ABSTRACT_NODE,
+                         GObject)
+#define RSG_TYPE_ABSTRACT_NODE rsg_abstract_node_get_type()
+struct _RsgAbstractNodeClass {
+  GObjectClass parent_class;
 
-/**
- * @brief Connection from this node's property to another node's property
- */
-typedef struct RsgPropertyConnection RsgPropertyConnection;
-struct RsgPropertyConnection {
-  const char* name;
-  RsgNode* targetNode;
-  const char* targetName;
-  RsgValue (**adapterFuncs)(RsgValue val);
-  size_t numAdapterFuncs;
-  STAILQ_ENTRY(RsgPropertyConnection) entries;
-};
+  /* Class virtual function fields. */
+  void (*processFunc)(RsgAbstractNode* node, RsgContext* ctx);
+  //  void (*setPropertyFunc)(RsgAbstractNode* node, const char* name,
+  //                          RsgValue value);
+  //  RsgValue (*getPropertyFunc)(RsgAbstractNode* node, const char* name);
 
-struct RsgNode {
-  const char* (*getTypeFunc)(void);
-  void (*destroyFunc)(RsgNode* node);
-  RsgValue (*getPropertyFunc)(RsgNode* node, const char* name);
-  void (*setPropertyFunc)(RsgNode* node, const char* name, RsgValue val);
-  void (*processFunc)(RsgNode* node,
-                      RsgLocalContext* lctx,
-                      RsgGlobalContext* gctx);
-  STAILQ_HEAD(, RsgPropertyConnection) propertyConnections;
+  /* Padding to allow adding up to 12 new virtual functions without
+   * breaking ABI. */
+  gpointer padding[12];
 };
 
 /*******************************************************************************
  * FUNCTIONS.
  */
-/**
- * @brief Initialize a base node structure with default values
- * @param node
- */
-extern void rsgNodeSetDefaults(RsgNode* node);
+extern void* rsgCallocDbg(size_t number, size_t size, const char* file,
+                          int line);
+extern void* rsgMallocDbg(size_t size, const char* file, int line);
+extern void* rsgReallocDbg(void* mem, size_t size, const char* file, int line);
+extern void rsgFreeDbg(void* mem, const char* file, int line);
 
-/**
- * @brief Init the local context with default values
- * @param lctx
- */
-void rsgLocalContextSetDefaults(RsgLocalContext* lctx);
+extern RsgGlobalContext* rsgGetGlobalContext(void);
+extern void rsgSetGlobalContext(RsgGlobalContext* gctx);
 
-/**
- * @brief Set/insert/overwrite a uniform value in the local context
- * @param lctx
- * @param name
- * @param value
- */
-extern void rsgLocalContextSetUniform(RsgLocalContext* lctx,
-                                      const char* name,
-                                      RsgValue value);
+extern void rsgLocalContextReset(RsgLocalContext* lctx);
 
-/**
- * @brief Make a deep copy (backup) of the context, its internal lists, etc.
- * @param lctx
- * @return
- */
-extern RsgLocalContext* rsgLocalContextCreateCopy(RsgLocalContext* origlctx);
+extern GValue rsgValueToGValue(RsgValue value);
+extern RsgValue rsgGValueToValue(GValue value);
 
-/**
- * @brief Destroy local context's variables, lists, etc. and free the memory
- * @param lctx
- */
-extern void rsgLocalContextDestroy(RsgGlobalContext* lctx);
-
-/**
- * @brief Allocate and create library global context
- * @param window/OpenGL context to attach to
- * @return
- */
-extern RsgGlobalContext* rsgGlobalContextCreate(GLFWwindow* window);
-
-/**
- * @brief Get pointer to the global context singleton
- * @return
- */
-extern RsgGlobalContext* rsgGlobalContextGet(void);
+extern GType vec2s_get_type(void);
+extern GType vec3s_get_type(void);
+extern GType vec4s_get_type(void);
+extern GType mat4s_get_type(void);
+// extern void vec2s_free(vec2s* data);
+// extern void vec3s_free(vec3s* data);
+// extern void vec4s_free(vec4s* data);
+// extern void mat4s_free(mat4s* data);
+// extern vec2s* vec2s_copy(const vec2s* data);
+// extern vec3s* vec3s_copy(const vec3s* data);
+// extern vec4s* vec4s_copy(const vec4s* data);
+// extern mat4s* mat4s_copy(const mat4s* data);

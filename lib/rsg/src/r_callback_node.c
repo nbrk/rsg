@@ -19,37 +19,97 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
+#include <stdio.h>
+
 #include "rsg_internal.h"
 
-struct RsgCallbackNode {
-  RsgNode node;
+G_DECLARE_FINAL_TYPE(RsgCallbackNode, rsg_callback_node, RSG, CALLBACK_NODE,
+                     RsgAbstractNode)
+
+struct _RsgCallbackNode {
+  RsgAbstractNode abstract;
   void (*callbackFunc)(void* cookie);
   void* cookie;
 };
 
-static const char* getType(void) {
-  return "RsgCallbackNode";
-}
+G_DEFINE_TYPE(RsgCallbackNode, rsg_callback_node, RSG_TYPE_ABSTRACT_NODE)
 
-static void process(RsgNode* node,
-                    RsgLocalContext* lctx,
-                    RsgGlobalContext* gctx) {
-  RsgCallbackNode* cnode = (RsgCallbackNode*)node;
-  if (cnode->callbackFunc != NULL)
+enum { PROP_FUNC = 1, PROP_COOKIE, N_PROPERTIES };
+
+static GParamSpec* properties[N_PROPERTIES] = {NULL};
+
+static void process(RsgAbstractNode* node, RsgContext* ctx) {
+  RsgCallbackNode* cnode = RSG_CALLBACK_NODE(node);
+  if (cnode->callbackFunc != NULL) {
     cnode->callbackFunc(cnode->cookie);
+  }
 }
 
-RsgCallbackNode* rsgCallbackNodeCreate(void (*func)(void*), void* cookie) {
-  RsgCallbackNode* node = rsgMalloc(sizeof(*node));
-  rsgNodeSetDefaults(&node->node);
+static void set_property(GObject* object, guint property_id,
+                         const GValue* value, GParamSpec* pspec) {
+  RsgCallbackNode* cnode = RSG_CALLBACK_NODE(object);
 
-  // base
-  node->node.getTypeFunc = getType;
-  node->node.processFunc = process;
+  switch (property_id) {
+    case PROP_FUNC:
+      cnode->callbackFunc = g_value_get_pointer(value);
+      printf("Callback node @%p, function set to %p\n", cnode,
+             cnode->callbackFunc);
+      break;
+    case PROP_COOKIE:
+      cnode->cookie = g_value_get_pointer(value);
+      printf("Callback node @%p, cookie set to %p\n", cnode, cnode->cookie);
+      break;
 
-  // other data
-  node->callbackFunc = func;
-  node->cookie = cookie;
+    default:
+      /* We don't have any other property... */
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+      break;
+  }
+}
 
-  return node;
+static void get_property(GObject* object, guint property_id, GValue* value,
+                         GParamSpec* pspec) {
+  RsgCallbackNode* cnode = RSG_CALLBACK_NODE(object);
+
+  switch (property_id) {
+    case PROP_FUNC:
+      g_value_set_pointer(value, cnode->callbackFunc);
+      break;
+    case PROP_COOKIE:
+      g_value_set_pointer(value, cnode->cookie);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+      break;
+  }
+}
+
+static void rsg_callback_node_class_init(RsgCallbackNodeClass* klass) {
+  RSG_ABSTRACT_NODE_CLASS(klass)->processFunc = process;
+
+  G_OBJECT_CLASS(klass)->set_property = set_property;
+  G_OBJECT_CLASS(klass)->get_property = get_property;
+
+  properties[PROP_FUNC] = g_param_spec_pointer(
+      "function", "Callback function",
+      "Pointer to user callback function to call in process()",
+      G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+
+  properties[PROP_COOKIE] = g_param_spec_pointer(
+      "cookie", "Callback argument",
+      "Pointer to a user data to be passed in the callback",
+      G_PARAM_CONSTRUCT | G_PARAM_READWRITE);
+
+  g_object_class_install_properties(G_OBJECT_CLASS(klass), N_PROPERTIES,
+                                    properties);
+}
+
+static void rsg_callback_node_init(RsgCallbackNode* cnode) {}
+
+RsgNode* rsgCallbackNodeCreate(void (*func)(void* cookie), void* cookie) {
+  return g_object_new(rsg_callback_node_get_type(), NULL);
+  /*  return g_object_new(rsg_callback_node_get_type(), "callback", func,
+                        "argument", cookie, NULL);*/
 }

@@ -19,40 +19,25 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include "rsg_internal.h"
-/*
- * TODO:
- * Camera node.
- * When processed:
- * sets the following in the local context:
- * - "u_view" (View matrix uniform)
- * - "u_projection" (Projection matrix uniform)
- * clears buffers in the OpenGL state:
- * - using clearColor field
- *
- * Exposes following properties:
- * - "clearColor" of vec4s
- * - "position" of vec3s
- * - "yaw" of float (horizontal angle)
- * - "pitch" of float (vertical angle)
- */
 
-G_DECLARE_FINAL_TYPE(RsgCameraNode, rsg_camera_node, RSG, CAMERA_NODE,
+#include "rsg_internal.h"
+
+G_DECLARE_FINAL_TYPE(RsgShaderNode, rsg_shader_node, RSG, SHADER_NODE,
                      RsgAbstractNode)
 
-struct _RsgCameraNode {
+struct _RsgShaderNode {
   RsgAbstractNode abstract;
   vec4s clearColor;
 };
 
-G_DEFINE_TYPE(RsgCameraNode, rsg_camera_node, RSG_TYPE_ABSTRACT_NODE)
+G_DEFINE_TYPE(RsgShaderNode, rsg_shader_node, RSG_TYPE_ABSTRACT_NODE)
 
 enum { PROP_CLEAR_COLOR = 1, N_PROPERTIES };
 
 static GParamSpec* properties[N_PROPERTIES] = {NULL};
 
 static void process(RsgAbstractNode* node, RsgContext* ctx) {
-  RsgCameraNode* cnode = RSG_CAMERA_NODE(node);
+  RsgShaderNode* cnode = RSG_SHADER_NODE(node);
 
   glClearColor(cnode->clearColor.raw[0], cnode->clearColor.raw[1],
                cnode->clearColor.raw[2], cnode->clearColor.raw[3]);
@@ -61,7 +46,7 @@ static void process(RsgAbstractNode* node, RsgContext* ctx) {
 
 static void set_property(GObject* object, guint property_id,
                          const GValue* value, GParamSpec* pspec) {
-  RsgCameraNode* cnode = RSG_CAMERA_NODE(object);
+  RsgShaderNode* cnode = RSG_SHADER_NODE(object);
 
   switch (property_id) {
     case PROP_CLEAR_COLOR:
@@ -75,7 +60,7 @@ static void set_property(GObject* object, guint property_id,
 
 static void get_property(GObject* object, guint property_id, GValue* value,
                          GParamSpec* pspec) {
-  RsgCameraNode* cnode = RSG_CAMERA_NODE(object);
+  RsgShaderNode* cnode = RSG_SHADER_NODE(object);
 
   switch (property_id) {
     case PROP_CLEAR_COLOR:
@@ -88,7 +73,7 @@ static void get_property(GObject* object, guint property_id, GValue* value,
   }
 }
 
-static void rsg_camera_node_class_init(RsgCameraNodeClass* klass) {
+static void rsg_shader_node_class_init(RsgShaderNodeClass* klass) {
   RSG_ABSTRACT_NODE_CLASS(klass)->processFunc = process;
 
   G_OBJECT_CLASS(klass)->set_property = set_property;
@@ -103,20 +88,14 @@ static void rsg_camera_node_class_init(RsgCameraNodeClass* klass) {
                                     properties);
 }
 
-static void rsg_camera_node_init(RsgCameraNode* cnode) {}
+static void rsg_shader_node_init(RsgShaderNode* cnode) {}
 
-RsgNode* rsgCameraNodeCreatePerspectiveDefault(void);
-RsgNode* rsgCameraNodeCreateOrthographicDefault(void);
-RsgNode* rsgCameraNodeCreate(vec3s position, float horizAngle, float vertAngle,
-                             float fov, float aspect, float nearPlane,
-                             float farPlane, bool perspective);
-
-// RsgNode* rsgCameraNodeCreate(void) {
-//  RsgNode* node = g_object_new(rsg_camera_node_get_type(), NULL);
-//  /*
-//   * Defaults
-//   */
-//  rsgNodeSetProperty(node, "clear_color",
-//                     rsgValueVec4((vec4s){0.0f, 0.0f, 0.0f, 1.0f}));
-//  return node;
-//}
+RsgNode* rsgShaderNodeCreate(void) {
+  RsgNode* node = g_object_new(rsg_shader_node_get_type(), NULL);
+  /*
+   * Defaults
+   */
+  rsgNodeSetProperty(node, "clear_color",
+                     rsgValueVec4((vec4s){0.0f, 0.0f, 0.0f, 1.0f}));
+  return node;
+}
