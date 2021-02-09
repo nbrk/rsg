@@ -56,30 +56,39 @@ static void process(RsgAbstractNode* node, RsgContext* ctx) {
   // program
   glUseProgram(ctx->local->program);
 
-//  // uniforms
-//  size_t i;
-//  for (i = 0; i < lctx->numUniforms; i++) {
-//    /*
-//     * Set the value if the program in use has such a uniform location.
-//     * Determine the corresponding OpenGL typed set call using the Value type.
-//     */
-//    GLint uniformLocation =
-//        glGetUniformLocation(lctx->program, lctx->uniformNames[i]);
-//    if (uniformLocation != -1) {
-//      RsgValue* value = &lctx->uniformValues[i];
-//      if (value->type == RSG_VALUE_INT)
-//        glUniform1i(uniformLocation, value->asInt);
-//      if (value->type == RSG_VALUE_FLOAT)
-//        glUniform1f(uniformLocation, value->asFloat);
-//      if (value->type == RSG_VALUE_VEC3)
-//        glUniform3fv(uniformLocation, 1, (GLfloat*)&value->asVec3);
-//      if (value->type == RSG_VALUE_VEC4)
-//        glUniform4fv(uniformLocation, 1, (GLfloat*)&value->asVec4);
-//      if (value->type == RSG_VALUE_MAT4)
-//        glUniformMatrix4fv(uniformLocation, 1, GL_FALSE,
-//                           (GLfloat*)&value->asMat4);
-//    }
-//  }
+  // uniforms
+  GLint uniformLocation;
+  uniformLocation = glGetUniformLocation(ctx->local->program, "u_view");
+  glUniformMatrix4fv(uniformLocation, 1, GL_FALSE,
+                     (GLfloat*)&ctx->local->u_view);
+  uniformLocation = glGetUniformLocation(ctx->local->program, "u_projection");
+  glUniformMatrix4fv(uniformLocation, 1, GL_FALSE,
+                     (GLfloat*)&ctx->local->u_projection);
+
+  //  size_t i;
+  //  for (i = 0; i < lctx->numUniforms; i++) {
+  //    /*
+  //     * Set the value if the program in use has such a uniform location.
+  //     * Determine the corresponding OpenGL typed set call using the Value
+  //     type.
+  //     */
+  //    GLint uniformLocation =
+  //        glGetUniformLocation(lctx->program, lctx->uniformNames[i]);
+  //    if (uniformLocation != -1) {
+  //      RsgValue* value = &lctx->uniformValues[i];
+  //      if (value->type == RSG_VALUE_INT)
+  //        glUniform1i(uniformLocation, value->asInt);
+  //      if (value->type == RSG_VALUE_FLOAT)
+  //        glUniform1f(uniformLocation, value->asFloat);
+  //      if (value->type == RSG_VALUE_VEC3)
+  //        glUniform3fv(uniformLocation, 1, (GLfloat*)&value->asVec3);
+  //      if (value->type == RSG_VALUE_VEC4)
+  //        glUniform4fv(uniformLocation, 1, (GLfloat*)&value->asVec4);
+  //      if (value->type == RSG_VALUE_MAT4)
+  //        glUniformMatrix4fv(uniformLocation, 1, GL_FALSE,
+  //                           (GLfloat*)&value->asMat4);
+  //    }
+  //  }
 
   // draw
   glBindVertexArray(cnode->vao);
@@ -138,4 +147,3 @@ RsgNode* rsgMeshNodeCreateTriangle(void) {
   RSG_MESH_NODE(node)->vao = vao;
   return node;
 }
-

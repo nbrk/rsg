@@ -36,6 +36,8 @@
  */
 typedef struct {
   GLuint program;
+  mat4s u_view;
+  mat4s u_projection;
 } RsgLocalContext;
 
 typedef struct {
@@ -47,6 +49,11 @@ typedef struct {
   RsgGlobalContext* global;
   RsgLocalContext* local;
 } RsgContext;
+
+struct RsgClosure {
+  GClosure* gclosure;
+  void* data;
+};
 
 G_DECLARE_DERIVABLE_TYPE(RsgAbstractNode,
                          rsg_abstract_node,

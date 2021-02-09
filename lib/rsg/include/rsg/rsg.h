@@ -65,6 +65,16 @@ typedef struct {
   };
 } RsgValue;
 
+///**
+// * @brief struct
+// */
+// typedef struct {
+//  void (*func)(RsgValue* fromValue, RsgValue* toValue, void* cookie);
+//  void* cookie;
+//} RsgPropertyValueAdapter;
+
+typedef struct RsgClosure RsgClosure;
+
 /**
  * @brief Opaque node type
  */
@@ -108,6 +118,17 @@ extern void rsgNodeBindProperty(RsgNode* node,
                                 const char* name,
                                 RsgNode* toNode,
                                 const char* toName);
+extern void rsgNodeBindPropertyWithClosure(RsgNode* node,
+                                           const char* name,
+                                           RsgNode* toNode,
+                                           const char* toName,
+                                           RsgClosure* toTransform);
+/*
+ * Closures
+ */
+extern RsgClosure* rsgClosureCreate(void(*func),
+                                    const void* cookie,
+                                    size_t sizeofCookie);
 
 /*
  * Callback node

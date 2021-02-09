@@ -33,8 +33,8 @@ static const char* vertex_0 =
     "void main()\n"
     "{\n"
     "//gl_Position = u_projection * u_view * u_model * vec4(a_position, 1.0);\n"
-    "//gl_Position = u_projection * u_view * vec4(a_position, 1.0);\n"
-    "gl_Position = vec4(a_position, 1.0);\n"
+    "gl_Position = u_projection * u_view * vec4(a_position, 1.0);\n"
+    "//gl_Position = vec4(a_position, 1.0);\n"
     "}\n"
     "\n";
 static const char* fragment_0 =
@@ -43,7 +43,7 @@ static const char* fragment_0 =
     "void main()\n"
     "{\n"
     "//gl_FragColor = u_diffuse_color;\n"
-    "gl_FragColor = vec4(0.3, 0.0, 0.0, 1.0);\n"
+    "gl_FragColor = vec4(0.5, 0.0, 0.0, 1.0);\n"
     "}\n"
     "\n";
 
@@ -57,11 +57,16 @@ static void printIntCookie(void* cookie) {
     printf("Int cookie is %d\n", (int)cookie);
 }
 
+static void mult(void* b, RsgValue* from, RsgValue* to, float* f) {
+  to->asFloat = from->asFloat * *f;
+}
+
 int main(int argc, char** argv) {
   //  rsgInit(1024, 768, RSG_INIT_FLAG_FULLSCREEN | RSG_INIT_FLAG_HIDECURSOR);
   rsgInit(1024, 768, 0);
 
   RsgNode* group1 = rsgGroupNodeCreate();
+  RsgNode* camera1 = rsgCameraNodeCreatePerspectiveDefault();
   //  RsgNode* screen1 = rsgScreenNodeCreate();
   RsgNode* mouse1 = rsgMouseManipulatorNodeCreate();
   RsgNode* printer1 = rsgPropertyPrinterNodeCreate();
@@ -70,8 +75,11 @@ int main(int argc, char** argv) {
 
   //  rsgNodeBindProperty(mouse1, "x", printer1, "int1");
   //  rsgNodeBindProperty(mouse1, "y", printer1, "int2");
-  //  rsgNodeBindProperty(mouse1, "xChange", printer1, "int3");
-  //  rsgNodeBindProperty(mouse1, "yChange", printer1, "int4");
+
+  float f = 0.01f;
+  rsgNodeBindPropertyWithClosure(mouse1, "xChange", camera1, "yawChange",
+                                 rsgClosureCreate(mult, &f, sizeof(float)));
+  //  rsgNodeBindProperty(mouse1, "yChange", camera1, "pitchChange");
 
   //  rsgNodeSetProperty(callback1, "callback", rsgValuePointer(func));
   //  rsgNodeSetProperty(screen1, "clearColor",
@@ -82,6 +90,7 @@ int main(int argc, char** argv) {
 
   //  rsgGroupNodeAddChild(group1, screen1);
   rsgGroupNodeAddChild(group1, mouse1);
+  rsgGroupNodeAddChild(group1, camera1);
   rsgGroupNodeAddChild(group1, printer1);
   rsgGroupNodeAddChild(group1, shader1);
   rsgGroupNodeAddChild(group1, mesh1);

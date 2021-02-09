@@ -13,6 +13,7 @@ set(SRCS
   src/r_context.c
   src/r_value.c
   src/r_value_gvalue.c
+  src/r_closure.c
   src/r_shader_loader.c
   src/r_main_loop.c
   src/r_abstract_node.c

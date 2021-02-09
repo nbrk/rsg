@@ -64,10 +64,26 @@ void rsgNodeSetProperty(RsgNode* node, const char* name, RsgValue value) {
   g_object_set_property(G_OBJECT(node), name, &gvalue);
 }
 
-void rsgNodeBindProperty(RsgNode* node, const char* name, RsgNode* toNode,
+void rsgNodeBindProperty(RsgNode* node,
+                         const char* name,
+                         RsgNode* toNode,
                          const char* toName) {
   assert(RSG_IS_ABSTRACT_NODE(node));
   assert(RSG_IS_ABSTRACT_NODE(toNode));
   (void)g_object_bind_property(G_OBJECT(node), name, G_OBJECT(toNode), toName,
                                0);
+}
+
+void rsgNodeBindPropertyWithClosure(RsgNode* node,
+                                    const char* name,
+                                    RsgNode* toNode,
+                                    const char* toName,
+                                    RsgClosure* toTransform) {
+  assert(RSG_IS_ABSTRACT_NODE(node));
+  assert(RSG_IS_ABSTRACT_NODE(toNode));
+  assert(toTransform != NULL);
+
+  (void)g_object_bind_property_with_closures(G_OBJECT(node), name,
+                                             G_OBJECT(toNode), toName, 0,
+                                             toTransform->gclosure, NULL);
 }

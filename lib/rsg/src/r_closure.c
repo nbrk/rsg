@@ -21,34 +21,14 @@
  */
 #include "rsg_internal.h"
 
-static RsgGlobalContext* globalContext = NULL;
+#include <string.h>
 
-RsgGlobalContext* rsgGetGlobalContext(void) {
-  return globalContext;
-}
-
-void rsgSetGlobalContext(RsgGlobalContext* gctx) {
-  globalContext = gctx;
-}
-
-int rsgGetScreenWidth(void) {
-  assert(globalContext != NULL);
-  int width;
-  int height;
-  glfwGetWindowSize(globalContext->window, &width, &height);
-  return width;
-}
-
-int rsgGetScreenHeight(void) {
-  assert(globalContext != NULL);
-  int width;
-  int height;
-  glfwGetWindowSize(globalContext->window, &width, &height);
-  return height;
-}
-
-void rsgLocalContextReset(RsgLocalContext* lctx) {
-  lctx->program = 0;
-  lctx->u_projection = glms_mat4_identity();
-  lctx->u_view = glms_mat4_identity();
+RsgClosure* rsgClosureCreate(void(*func),
+                             const void* cookie,
+                             size_t sizeofCookie) {
+  RsgClosure* closure = rsgMalloc(sizeof(*closure));
+  closure->data = rsgMalloc(sizeofCookie);
+  memcpy(closure->data, cookie, sizeofCookie);
+  closure->gclosure = g_cclosure_new(G_CALLBACK(func), closure->data, NULL);
+  return closure;
 }
